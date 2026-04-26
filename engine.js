@@ -55,10 +55,9 @@ function normalizeScores(rawScores) {
 }
 
 // ════════════════════════════════════════════
-// ENGINE ENSEMBLE - SHARP POLTAR MODE
+// ENGINE ENSEMBLE - REVERSE EXTREME POLTAR MODE
 // Fokus utama: ranking AS, KOP, KEPALA, EKOR.
-// Formula: 40% Multi-source Markov, 35% Position Recency,
-//          15% Short Momentum, 7% Long Frequency, 3% Controlled Gap
+// Skor rendah dianggap paling kuat.
 // ════════════════════════════════════════════
 function runEnsemble(results) {
   const n = results.length;
@@ -83,8 +82,6 @@ function runEnsemble(results) {
     for (let d = 0; d <= 9; d++) scores[d] = 0;
 
     // ── METODE 1: MULTI-SOURCE SMOOTHED MARKOV ──
-    // Tidak lagi memilih 1 sumber terbaik saja.
-    // Semua posisi sumber AS/KOP/KEPALA/EKOR digabung sesuai kekuatan sinyalnya.
     const markovRaw = {};
     for (let d = 0; d <= 9; d++) markovRaw[d] = 0;
 
@@ -126,7 +123,6 @@ function runEnsemble(results) {
     const markovScore = normalizeScores(markovRaw);
 
     // ── METODE 2: POSITION RECENCY ──
-    // Lebih responsif dibanding versi sebelumnya: decay 22.
     const recencyRaw = {};
     for (let d = 0; d <= 9; d++) recencyRaw[d] = 0;
     for (let i = 0; i < n; i++) {
@@ -138,8 +134,6 @@ function runEnsemble(results) {
     const recencyScore = normalizeScores(recencyRaw);
 
     // ── METODE 3: SHORT MOMENTUM ──
-    // Dorong digit yang sedang aktif di 12 data terakhir.
-    // Data paling baru mendapat bobot paling besar.
     const momentumRaw = {};
     for (let d = 0; d <= 9; d++) momentumRaw[d] = 0;
     const startMomentum = Math.max(0, n - MOMENTUM_WINDOW);
@@ -152,7 +146,6 @@ function runEnsemble(results) {
     const momentumScore = normalizeScores(momentumRaw);
 
     // ── METODE 4: LONG-TERM FREQUENCY ──
-    // Tetap dipakai kecil sebagai jangkar, bukan penentu utama.
     const frequencyRaw = {};
     for (let d = 0; d <= 9; d++) frequencyRaw[d] = 0;
     for (let i = 0; i < n; i++) {
@@ -161,7 +154,6 @@ function runEnsemble(results) {
     const frequencyScore = normalizeScores(frequencyRaw);
 
     // ── METODE 5: CONTROLLED GAP ──
-    // Gap sangat kecil. Fungsinya hanya tie-breaker ringan.
     const lastSeen = {};
     const gapRaw = {};
     for (let d = 0; d <= 9; d++) {
@@ -186,7 +178,8 @@ function runEnsemble(results) {
       scores[d] += gapScore[d] * WEIGHTS.gap;
     }
 
-    // Normalisasi final ke 0-10 agar format UI tetap sama
+    // Normalisasi final ke 0-10 agar format UI tetap sama.
+    // Mode reverse: angka dengan skor lebih rendah ditampilkan sebagai yang terkuat.
     const normalized = {};
     const maxScore = Math.max(...Object.values(scores)) || 1;
     for (let d = 0; d <= 9; d++) {
@@ -194,20 +187,20 @@ function runEnsemble(results) {
     }
 
     const sorted = Object.entries(normalized)
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => a[1] - b[1])
       .map(([digit, score]) => ({ digit: parseInt(digit), score: parseFloat(score.toFixed(2)) }));
 
     posData.push({ label: posLabels[posOut], sorted, normalized });
   }
 
-  // BBFS 8D & AI 4D dari gabungan KEP+EKR tetap mengikuti skor POLTAR terbaru
+  // BBFS 8D & AI 4D dari gabungan KEP+EKR ikut mode reverse: skor rendah dianggap kuat
   const combined = {};
   for (let d = 0; d <= 9; d++) {
     combined[d] = (posData[2].normalized[d] + posData[3].normalized[d]) / 2;
   }
-  const bbfs8 = Object.entries(combined).sort((a, b) => b[1] - a[1])
+  const bbfs8 = Object.entries(combined).sort((a, b) => a[1] - b[1])
     .slice(0, 8).map(([d]) => d).sort((a, b) => a - b);
-  const ai4 = Object.entries(combined).sort((a, b) => b[1] - a[1])
+  const ai4 = Object.entries(combined).sort((a, b) => a[1] - b[1])
     .slice(0, 4).map(([d]) => d).sort((a, b) => a - b);
 
   // Backtest winrate tetap sama sesuai permintaan
