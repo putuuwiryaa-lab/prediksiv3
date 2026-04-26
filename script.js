@@ -1,6 +1,6 @@
 /* ============================================
-   PREDIKSI 2D PRO - script.js
-   JANGAN EDIT file ini kecuali untuk ubah engine
+   PREDIKSI 4D PRO - script.js
+   Clean & Modern Edition
    ============================================ */
 
 const SUPABASE_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co';
@@ -240,21 +240,18 @@ function runEnsemble(results) {
 }
 
 // ════════════════════════════════════════════
-// BUILD RESULT HTML
+// BUILD RESULT HTML (DIEDIT SESUAI KESEPAKATAN)
 // ════════════════════════════════════════════
 
 function buildResultHTML(results, pred, market) {
-  const latest = results.slice(-8).reverse();
-  const posColors = ['var(--accent)', 'var(--accent2)', '#a040f0', 'var(--accent3)'];
+  const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
   const posClass = ['as', 'kop', 'kpl', 'ekr'];
 
-  const historyHTML = latest.map((r, i) =>
-    `<div class="history-chip ${i === 0 ? 'latest' : ''}">${r}</div>`
-  ).join('');
-
+  // Per-posisi prediksi (Grafik Vertikal urut 0-9)
   const predCardsHTML = pred.posData.map((pos, pi) => {
     const maxScore = pos.sorted[0].score || 1;
 
+    // Angka terkuat (Dibuat melintang 1 baris)
     const digitBoxes = pos.sorted.map((item, rank) => {
       let cls = 'rank-mid';
       if (rank === 0) cls = 'rank-1';
@@ -264,62 +261,66 @@ function buildResultHTML(results, pred, market) {
       return `<div class="digit-box ${cls}">${item.digit}</div>`;
     }).join('');
 
-    const barRows = pos.sorted.map(item => {
-      const pct = (item.score / maxScore * 100).toFixed(0);
+    // Chart Bar Vertikal 0-9
+    const barRows = Array.from({length: 10}, (_, i) => i).map(digit => {
+      const score = pos.normalized[digit] || 0;
+      const pct = (score / maxScore * 100).toFixed(0);
+      const barColor = posColors[pi];
       return `
-        <div class="score-row">
-          <div class="score-digit">${item.digit}</div>
-          <div class="score-bar-bg">
-            <div class="score-bar-fill" style="width:${pct}%;background:${posColors[pi]}"></div>
+        <div class="bar-col">
+          <div class="bar-val">${score > 0 ? score.toFixed(1) : '0'}</div>
+          <div class="bar-wrapper">
+            <div class="bar-fill" style="height:${pct}%; background:${barColor}"></div>
           </div>
-          <div class="score-val">${item.score.toFixed(1)}</div>
-        </div>`;
+          <div class="bar-label">${digit}</div>
+        </div>
+      `;
     }).join('');
 
     return `
       <div class="pred-card ${posClass[pi]}">
         <div class="pred-pos-label">${pos.label}</div>
         <div class="digit-row">${digitBoxes}</div>
-        <div class="score-bar-wrap">${barRows}</div>
-      </div>`;
+        <div class="chart-container">${barRows}</div>
+      </div>
+    `;
   }).join('');
 
-  const bbfsChips = pred.bbfs8.map(d => `<div class="bbfs-chip">${d}</div>`).join('');
+  // Hitung BBFS + AI
+  const bbfsChips = pred.bbfs8.map(d =>
+    `<div class="bbfs-chip">${d}</div>`).join('');
   const ai4Chips = pred.ai4.map(d =>
-    `<div class="bbfs-chip" style="border-color:rgba(160,64,240,0.4);color:#a040f0;background:rgba(160,64,240,0.08)">${d}</div>`
-  ).join('');
+    `<div class="bbfs-chip" style="color:var(--accent4);">${d}</div>`).join('');
 
   const bbfsWR = ((pred.winBBFS / pred.totalTransisi) * 100).toFixed(1);
-  const aiWR  = ((pred.winAI  / pred.totalTransisi) * 100).toFixed(1);
+  const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
 
+  // Return HTML (History/Result Terakhir Dihapus dari UI)
   return `
     <div>
-      <div class="section-label">Result Terakhir</div>
-      <div class="history-scroll">${historyHTML}</div>
-    </div>
-    <div>
-      <div class="section-label">Prediksi Per Posisi (Terkuat → Terlemah)</div>
       <div class="pred-grid">${predCardsHTML}</div>
     </div>
+
     <div>
-      <div class="section-label">BBFS &amp; Angka Ikut</div>
       <div class="bbfs-card">
         <div class="bbfs-label">BBFS 8 DIGIT</div>
         <div class="bbfs-row">${bbfsChips}</div>
         <div class="winrate-row">
           <div class="wr-badge bbfs">BBFS: ${bbfsWR}% Winrate</div>
         </div>
-        <div style="height:12px"></div>
+        <div style="height:24px"></div>
         <div class="bbfs-label">ANGKA IKUT 4 DIGIT</div>
         <div class="bbfs-row">${ai4Chips}</div>
         <div class="winrate-row">
           <div class="wr-badge ai">AI: ${aiWR}% Winrate</div>
         </div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
 fetchMarkets();
+                                      
