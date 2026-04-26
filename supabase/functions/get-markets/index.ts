@@ -22,8 +22,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const SUPABASE_URL = "https://ldeofmwxttdjcvylhabu.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTM2NDYsImV4cCI6MjA5MjU4OTY0Nn0.MBl-9xqRmm0FxCuzuQR68zFKGkWY_yVV4I05yI1KM2U";
+    const SUPABASE_URL =
+      Deno.env.get("SUPABASE_URL") || "https://ldeofmwxttdjcvylhabu.supabase.co";
+
+    const SUPABASE_KEY =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+      Deno.env.get("SUPABASE_ANON_KEY") ||
+      "KEY";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -42,7 +47,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: String(error?.message || error) }), {
       status: 500,
       headers: {
         ...corsHeaders,
