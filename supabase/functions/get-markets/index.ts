@@ -22,8 +22,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const SUPABASE_URL = "https://PROJECT_REF.supabase.co";
-    const SUPABASE_KEY = "KEY";
+    const SUPABASE_URL = "https://ldeofmwxttdjcvylhabu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTM2NDYsImV4cCI6MjA5MjU4OTY0Nn0.MBl-9xqRmm0FxCuzuQR68zFKGkWY_yVV4I05yI1KM2U";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
