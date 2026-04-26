@@ -9,7 +9,7 @@ const DOT_COLORS = [
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
-const PREMIUM_APP_URL = '#';
+const PREMIUM_APP_URL = 'https://analisaangka.online';
 
 let resultPanelOpen = false;
 let internalClosing = false;
