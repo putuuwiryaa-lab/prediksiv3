@@ -11,6 +11,7 @@
   --accent2: #0ea5e9;
   --accent3: #f43f5e;
   --accent4: #8b5cf6;
+  --gold: #f0c040;
   --text: #f8fafc;
   --muted: #64748b;
   --strong: #ffffff;
@@ -45,6 +46,45 @@ body {
 .logo span { color: var(--accent2); }
 .badge { font-size: 9px; font-weight: 800; color: #fff; background: var(--accent); padding: 5px 12px; border-radius: 20px; letter-spacing: 0.5px; }
 .subtitle { font-size: 12px; color: var(--muted); }
+
+/* ── PREMIUM APP BANNER ── */
+.premium-ad {
+  margin: 16px 20px 0;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(240, 192, 64, 0.24);
+  background:
+    radial-gradient(circle at top left, rgba(240, 192, 64, 0.20), transparent 34%),
+    linear-gradient(135deg, rgba(19, 27, 44, 0.98), rgba(11, 15, 25, 0.98));
+  box-shadow: 0 18px 36px rgba(0,0,0,0.28), 0 0 22px rgba(240,192,64,0.07);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  animation: slideIn 0.3s ease;
+}
+.premium-ad::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,0.06), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.premium-ad:active { transform: scale(0.98); }
+.premium-ad-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.premium-ad-badge {
+  font-size: 8px;
+  font-weight: 900;
+  color: #03050a;
+  background: linear-gradient(135deg, #f0c040, #f59e0b);
+  border-radius: 999px;
+  padding: 5px 9px;
+  letter-spacing: 0.7px;
+}
+.premium-ad-title { font-size: 15px; font-weight: 900; letter-spacing: 0.7px; color: var(--strong); }
+.premium-ad-text { font-size: 11px; line-height: 1.45; color: var(--muted); margin-bottom: 12px; }
+.premium-ad-cta { font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 1px; }
 
 /* ── SEARCH & STATS ── */
 .search-wrap { padding: 16px 20px; }
@@ -323,3 +363,4 @@ body {
 /* ── ANIMATIONS ── */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes shimmer { 0%, 55% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
