@@ -1,5 +1,5 @@
 /* ============================================
-   PREDIKSI 4D PRO - Clean Modern (No Overflow)
+   PREDIKSI 4D PRO - Clean Modern (Fixed Layout)
    ============================================ */
 
 :root {
@@ -39,20 +39,38 @@ body {
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .logo { font-size: 18px; font-weight: 800; color: var(--strong); }
 .logo span { color: var(--accent2); }
+.badge { font-size: 9px; font-weight: 800; color: #fff; background: var(--accent); padding: 5px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+.subtitle { font-size: 12px; color: var(--muted); }
 
 /* ── SEARCH & STATS ── */
 .search-wrap { padding: 16px 20px; }
+.search-wrap-inner { position: relative; }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
 .search-box {
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px 12px 12px 40px;
+  padding: 14px 16px 14px 44px;
   color: #fff;
   outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  transition: all 0.2s ease;
 }
+.search-box:focus { border-color: var(--accent); background: var(--surface2); }
 .stats-row { display: flex; gap: 12px; padding: 0 20px 10px; font-size: 10px; color: var(--muted); }
 
 /* ── MARKET LIST ── */
@@ -62,7 +80,14 @@ body {
   border-radius: 12px;
   padding: 14px;
   border: 1px solid rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
+.market-card:active { transform: scale(0.98); background: var(--surface2); border-color: var(--border); }
+.market-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.market-name { font-size: 11px; font-weight: 700; color: var(--strong); line-height: 1.3; }
+.market-result { font-size: 15px; font-weight: 800; color: var(--accent2); letter-spacing: 2px; padding-left: 16px; }
 
 /* ── RESULT PANEL ── */
 .result-panel {
@@ -83,10 +108,13 @@ body {
   gap: 12px;
   position: sticky;
   top: 0;
-  background: var(--bg);
+  background: rgba(11, 15, 25, 0.95);
   z-index: 20;
+  backdrop-filter: blur(12px);
 }
-.back-btn { width: 36px; height: 36px; background: var(--surface); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.back-btn { width: 36px; height: 36px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--strong); }
+.result-title { font-size: 14px; font-weight: 800; color: var(--strong); }
+.result-subtitle { font-size: 10px; color: var(--accent2); margin-top: 2px; font-weight: 600; }
 
 .result-body { 
   padding: 16px; 
@@ -94,6 +122,7 @@ body {
   flex-direction: column; 
   gap: 20px; 
   max-width: 100vw; 
+  animation: slideIn 0.3s ease;
 }
 
 /* ── SECTION CHART (ATAS) ── */
@@ -106,6 +135,7 @@ body {
   background: var(--surface);
   border-radius: 14px;
   padding: 14px;
+  border: 1px solid var(--border);
 }
 .pos-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
 
@@ -131,27 +161,64 @@ body {
   border: 1px solid var(--border);
 }
 
-.row-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
-.row-label span { color: var(--accent2); font-size: 9px; }
+.row-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.row-label span { color: var(--accent2); font-size: 8px; letter-spacing: 0.5px; background: rgba(14, 165, 233, 0.1); padding: 4px 8px; border-radius: 4px; }
 
 .digit-scroll {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 4px;
 }
 .digit-scroll::-webkit-scrollbar { display: none; }
 .digit-box {
-  width: 38px; height: 38px;
+  width: 40px; height: 40px;
   background: var(--surface2);
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 800; flex-shrink: 0;
+  font-size: 16px; font-weight: 800; flex-shrink: 0; border: 1px solid transparent;
 }
-.digit-box.top { border: 1px solid var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.1); }
+.digit-box.top { border: 1px solid var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.1); box-shadow: 0 0 10px rgba(59,130,246,0.15); }
 
 /* ── WINRATE ── */
-.wr-tag { font-size: 10px; font-weight: 700; color: var(--accent2); margin-top: 6px; }
+.wr-tag { font-size: 10px; font-weight: 700; color: var(--accent2); margin-top: 8px; }
 
-@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ── LOADING SCREEN & EMPTY STATE ── */
+.loading-screen {
+  display: none; 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(11, 15, 25, 0.95);
+  z-index: 999; 
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: column; 
+  gap: 20px;
+  backdrop-filter: blur(8px);
+}
+.loading-screen.show { display: flex; }
+.spinner { 
+  width: 40px; height: 40px; 
+  border: 3px solid var(--surface2); 
+  border-top-color: var(--accent); 
+  border-radius: 50%; 
+  animation: spin 0.8s infinite linear; 
+}
+.loading-text { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+
+.empty-state { 
+  grid-column: 1 / -1; 
+  text-align: center; 
+  padding: 60px 20px; 
+  color: var(--muted); 
+  font-size: 12px; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+}
+
+/* ── ANIMATIONS ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+   
