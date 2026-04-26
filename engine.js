@@ -11,10 +11,7 @@ let allMarkets = [];
 // ════════════════════════════════════════════
 async function fetchMarkets() {
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/markets?select=id,name,history_data,order,updated_at&order=order.asc`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-    );
+    const res = await fetch(MARKETS_API_URL);
     if (!res.ok) throw new Error('Fetch failed');
     allMarkets = await res.json();
     
@@ -48,8 +45,27 @@ function parseHistory(raw, limit) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+function normalizeScores(rawScores) {
+  const maxScore = Math.max(...Object.values(rawScores)) || 1;
+  const normalized = {};
+  for (let d = 0; d <= 9; d++) {
+    normalized[d] = maxScore > 0 ? rawScores[d] / maxScore : 0;
+  }
+  return normalized;
+}
+
+function getTopDigits(scoreMap, limit) {
+  return Object.entries(scoreMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([d]) => parseInt(d));
+}
+
 // ════════════════════════════════════════════
 // ENGINE ENSEMBLE
+// Formula: 35% Smoothed Markov, 30% Exponential Recency,
+//          20% Long-term Frequency, 10% Controlled Gap,
+//           5% Stability Filter
 // ════════════════════════════════════════════
 function runEnsemble(results) {
   const n = results.length;
@@ -57,13 +73,28 @@ function runEnsemble(results) {
   const posLabels = ['AS', 'KOP', 'KEPALA', 'EKOR'];
   const posData = [];
 
+  const WEIGHTS = {
+    markov: 0.35,
+    recency: 0.30,
+    frequency: 0.20,
+    gap: 0.10,
+    stability: 0.05
+  };
+
+  const MARKOV_ALPHA = 0.5;
+  const RECENCY_DECAY = 28;
+  const STABILITY_TOP = 4;
+
   for (let posOut = 0; posOut < 4; posOut++) {
     const scores = {};
     for (let d = 0; d <= 9; d++) scores[d] = 0;
 
-    // ── METODE 1: MARKOV (bobot 40%) ──
-    let bestMarkovScore = -1;
-    let bestMarkovDigits = null;
+    // ── METODE 1: SMOOTHED MARKOV ──
+    // Membaca transisi posisi mana pun pada draw sebelumnya -> posisi output draw berikutnya.
+    // Smoothing menjaga Markov tetap stabil saat sampel transisi kecil.
+    let bestMarkovStrength = -1;
+    let markovRaw = {};
+    for (let d = 0; d <= 9; d++) markovRaw[d] = 0;
 
     for (let posPat = 0; posPat < 4; posPat++) {
       const freqMap = {};
@@ -76,50 +107,92 @@ function runEnsemble(results) {
       }
 
       const lastPat = parseInt(results[n - 1][posPat]);
-      const counter = freqMap[lastPat];
+      const counter = freqMap[lastPat] || {};
       const total = Object.values(counter).reduce((a, b) => a + b, 0);
 
-      if (total >= 3) {
-        const sorted = Object.entries(counter).sort((a, b) => b[1] - a[1]);
-        const topScore = sorted[0] ? sorted[0][1] : 0;
-        if (topScore > bestMarkovScore) {
-          bestMarkovScore = topScore;
-          bestMarkovDigits = { counter, total };
-        }
-      }
-    }
-
-    if (bestMarkovDigits) {
-      const { counter, total } = bestMarkovDigits;
+      const candidate = {};
       for (let d = 0; d <= 9; d++) {
-        scores[d] += ((counter[d] || 0) / total) * 4.0;
+        candidate[d] = ((counter[d] || 0) + MARKOV_ALPHA) / (total + MARKOV_ALPHA * 10);
+      }
+
+      const sortedCandidate = Object.entries(candidate).sort((a, b) => b[1] - a[1]);
+      const strength = total * (sortedCandidate[0][1] - sortedCandidate[1][1]);
+      if (strength > bestMarkovStrength) {
+        bestMarkovStrength = strength;
+        markovRaw = candidate;
       }
     }
 
-    // ── METODE 2: GAP/OVERDUE (bobot 30%) ──
+    const markovScore = normalizeScores(markovRaw);
+
+    // ── METODE 2: EXPONENTIAL RECENCY ──
+    // Semua 169 data tetap dipakai, tetapi data terbaru diberi bobot lebih besar.
+    const recencyRaw = {};
+    for (let d = 0; d <= 9; d++) recencyRaw[d] = 0;
+    for (let i = 0; i < n; i++) {
+      const digit = parseInt(results[i][posOut]);
+      const age = n - 1 - i;
+      const weight = Math.exp(-age / RECENCY_DECAY);
+      recencyRaw[digit] += weight;
+    }
+    const recencyScore = normalizeScores(recencyRaw);
+
+    // ── METODE 3: LONG-TERM FREQUENCY ──
+    // Menjadi jangkar stabil agar prediksi tidak terlalu reaktif ke data pendek.
+    const frequencyRaw = {};
+    for (let d = 0; d <= 9; d++) frequencyRaw[d] = 0;
+    for (let i = 0; i < n; i++) {
+      frequencyRaw[parseInt(results[i][posOut])]++;
+    }
+    const frequencyScore = normalizeScores(frequencyRaw);
+
+    // ── METODE 4: CONTROLLED GAP ──
+    // Gap tetap dipakai sebagai sinyal kecil, tetapi efeknya dibuat log agar tidak liar.
     const lastSeen = {};
-    for (let d = 0; d <= 9; d++) lastSeen[d] = -1;
+    const gapRaw = {};
+    for (let d = 0; d <= 9; d++) {
+      lastSeen[d] = -1;
+      gapRaw[d] = 0;
+    }
     for (let i = 0; i < n; i++) {
       lastSeen[parseInt(results[i][posOut])] = i;
     }
     for (let d = 0; d <= 9; d++) {
       const gap = lastSeen[d] === -1 ? n : (n - 1 - lastSeen[d]);
-      scores[d] += (gap / n) * 3.0;
+      gapRaw[d] = Math.log1p(gap) / Math.log1p(n);
     }
+    const gapScore = normalizeScores(gapRaw);
 
-    // ── METODE 3: RECENCY 20 data terakhir (bobot 30%) ──
-    const recent = results.slice(-20);
-    const recencyCount = {};
-    for (let d = 0; d <= 9; d++) recencyCount[d] = 0;
-    for (const r of recent) recencyCount[parseInt(r[posOut])]++;
-    const recMax = Math.max(...Object.values(recencyCount)) || 1;
+    // ── METODE 5: STABILITY FILTER ──
+    // Bonus untuk digit yang konsisten masuk top dari beberapa metode utama.
+    const stabilityRaw = {};
+    for (let d = 0; d <= 9; d++) stabilityRaw[d] = 0;
+
+    const topMarkov = getTopDigits(markovScore, STABILITY_TOP);
+    const topRecency = getTopDigits(recencyScore, STABILITY_TOP);
+    const topFrequency = getTopDigits(frequencyScore, STABILITY_TOP);
+    const topGap = getTopDigits(gapScore, STABILITY_TOP);
+
     for (let d = 0; d <= 9; d++) {
-      scores[d] += (recencyCount[d] / recMax) * 3.0;
+      if (topMarkov.includes(d)) stabilityRaw[d] += 1.25;
+      if (topRecency.includes(d)) stabilityRaw[d] += 1.00;
+      if (topFrequency.includes(d)) stabilityRaw[d] += 0.85;
+      if (topGap.includes(d)) stabilityRaw[d] += 0.40;
+    }
+    const stabilityScore = normalizeScores(stabilityRaw);
+
+    // ── FINAL SCORE ──
+    for (let d = 0; d <= 9; d++) {
+      scores[d] += markovScore[d] * WEIGHTS.markov;
+      scores[d] += recencyScore[d] * WEIGHTS.recency;
+      scores[d] += frequencyScore[d] * WEIGHTS.frequency;
+      scores[d] += gapScore[d] * WEIGHTS.gap;
+      scores[d] += stabilityScore[d] * WEIGHTS.stability;
     }
 
-    // Normalisasi ke 0-10
-    const maxScore = Math.max(...Object.values(scores)) || 1;
+    // Normalisasi final ke 0-10 agar format UI tetap sama
     const normalized = {};
+    const maxScore = Math.max(...Object.values(scores)) || 1;
     for (let d = 0; d <= 9; d++) {
       normalized[d] = (scores[d] / maxScore) * 10;
     }
@@ -141,7 +214,7 @@ function runEnsemble(results) {
   const ai4 = Object.entries(combined).sort((a, b) => b[1] - a[1])
     .slice(0, 4).map(([d]) => d).sort((a, b) => a - b);
 
-  // Backtest winrate
+  // Backtest winrate tetap sama sesuai permintaan
   let winBBFS = 0, winAI = 0;
   for (let i = 0; i < transitions; i++) {
     const nxtKep = results[i + 1][2];
