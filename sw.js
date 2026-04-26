@@ -1,10 +1,10 @@
-const CACHE_NAME = 'prediksi4d-pro-v1';
+const CACHE_NAME = 'prediksi4d-pro-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/style.css',
-  '/engine.js',
-  '/ui.js',
+  '/style.css?v=2',
+  '/engine.js?v=2',
+  '/ui.js?v=2',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg'
@@ -48,6 +48,12 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
+    fetch(request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        return response;
+      })
+      .catch(() => caches.match(request))
   );
 });
