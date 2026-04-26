@@ -4,7 +4,7 @@
    ============================================ */
 
 const SUPABASE_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzAxMzY0NiwiZXhwIjoyMDkyNTg5NjQ2fQ.VUKP09WUQ2J8n99d8uIhpzNqTZqNQQLX_UuUFJ78MLs';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTM2NDYsImV4cCI6MjA5MjU4OTY0Nn0.MBl-9xqRmm0FxCuzuQR68zFKGkWY_yVV4I05yI1KM2U';
 
 const DOT_COLORS = [
   '#f0c040','#40c0f0','#f04060','#a040f0',
