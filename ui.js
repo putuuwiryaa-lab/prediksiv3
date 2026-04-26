@@ -60,7 +60,6 @@ async function openMarket(id) {
   const prediksi = runEnsemble(results);
 
   document.getElementById('resultTitle').textContent = market.name;
-  document.getElementById('resultSubtitle').textContent = ""; 
   document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market);
 
   hideLoading();
@@ -81,7 +80,7 @@ function hideLoading() {
 }
 
 // ════════════════════════════════════════════
-// BUILD RESULT HTML (CHART ATAS, ANGKA BAWAH)
+// BUILD RESULT HTML (CHART ATAS, ANGKA BAWAH SERAGAM)
 // ════════════════════════════════════════════
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
@@ -109,10 +108,10 @@ function buildResultHTML(results, pred, market) {
       </div>`;
   }).join('');
 
-  // 2. GENERATE DIGITS (BAGIAN BAWAH)
+  // 2. GENERATE DIGITS (BAGIAN BAWAH - SEMUA WARNA SERAGAM)
   const digitRowsHTML = pred.posData.map((pos, pi) => {
-    const boxes = pos.sorted.map((item, rank) => 
-      `<div class="digit-box ${rank < 3 ? 'top' : ''}">${item.digit}</div>`
+    const boxes = pos.sorted.map((item) => 
+      `<div class="digit-box">${item.digit}</div>`
     ).join('');
     
     return `
@@ -134,7 +133,7 @@ function buildResultHTML(results, pred, market) {
       <div style="border-top: 1px dashed var(--border); padding-top: 15px;">
         <div class="row-label">BBFS 8 DIGIT</div>
         <div class="digit-scroll">
-          ${pred.bbfs8.map(d => `<div class="digit-box top">${d}</div>`).join('')}
+          ${pred.bbfs8.map(d => `<div class="digit-box">${d}</div>`).join('')}
         </div>
         <div class="wr-tag">WINRATE: ${bbfsWR}%</div>
       </div>
@@ -142,7 +141,7 @@ function buildResultHTML(results, pred, market) {
       <div>
         <div class="row-label">ANGKA IKUT 4 DIGIT</div>
         <div class="digit-scroll">
-          ${pred.ai4.map(d => `<div class="digit-box" style="color:var(--accent4); border:1px solid var(--accent4)">${d}</div>`).join('')}
+          ${pred.ai4.map(d => `<div class="digit-box">${d}</div>`).join('')}
         </div>
         <div class="wr-tag">WINRATE: ${aiWR}%</div>
       </div>
@@ -151,7 +150,6 @@ function buildResultHTML(results, pred, market) {
 }
 
 // ════════════════════════════════════════════
-// INIT SISTEM 
-// (Menjalankan fungsi fetch dari engine.js)
+// INIT SISTEM
 // ════════════════════════════════════════════
 fetchMarkets();
