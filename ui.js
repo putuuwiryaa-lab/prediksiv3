@@ -80,25 +80,18 @@ function hideLoading() {
 }
 
 // ════════════════════════════════════════════
-// BUILD RESULT HTML (CHART ATAS, ANGKA BAWAH SERAGAM)
+// BUILD RESULT HTML (Layout: POLTAR vs RUTE LAIN)
 // ════════════════════════════════════════════
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
 
-  // 1. GENERATE CHARTS (BAGIAN ATAS)
+  // 1. GENERATE CHARTS (BAGIAN POLTAR)
   const chartsHTML = pred.posData.map((pos, pi) => {
     const maxScore = pos.sorted[0].score || 1;
-    
     const barRows = Array.from({length: 10}, (_, i) => i).map(digit => {
       const score = pos.normalized[digit] || 0;
       const pct = (score / maxScore * 100).toFixed(0);
-      return `
-        <div class="bar-col">
-          <div class="bar-wrapper">
-            <div class="bar-fill" style="height:${pct}%; background:${posColors[pi]}"></div>
-          </div>
-          <div class="bar-label">${digit}</div>
-        </div>`;
+      return `<div class="bar-col"><div class="bar-wrapper"><div class="bar-fill" style="height:${pct}%; background:${posColors[pi]}"></div></div><div class="bar-label">${digit}</div></div>`;
     }).join('');
 
     return `
@@ -108,14 +101,11 @@ function buildResultHTML(results, pred, market) {
       </div>`;
   }).join('');
 
-  // 2. GENERATE DIGITS (BAGIAN BAWAH - SEMUA WARNA SERAGAM)
-  const digitRowsHTML = pred.posData.map((pos, pi) => {
-    const boxes = pos.sorted.map((item) => 
-      `<div class="digit-box">${item.digit}</div>`
-    ).join('');
-    
+  // 2. GENERATE DIGITS POLTAR (SEMUA SERAGAM)
+  const digitRowsHTML = pred.posData.map((pos) => {
+    const boxes = pos.sorted.map((item) => `<div class="digit-box">${item.digit}</div>`).join('');
     return `
-      <div>
+      <div style="margin-bottom: 12px;">
         <div class="row-label">${pos.label} <span>TERKUAT ➔ TERLEMAH</span></div>
         <div class="digit-scroll">${boxes}</div>
       </div>`;
@@ -125,24 +115,23 @@ function buildResultHTML(results, pred, market) {
   const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
 
   return `
+    <div class="section-title">POLTAR 4D</div>
+    <div class="advisory-text">Manajemen Risiko: Pilih jumlah digit sesuai modal & target profit Anda.</div>
     <div class="chart-section">${chartsHTML}</div>
+    <div class="summary-section" style="margin-top:15px;">${digitRowsHTML}</div>
 
+    <div class="divider"></div>
+
+    <div class="section-title">RUTE LAIN</div>
     <div class="summary-section">
-      ${digitRowsHTML}
-      
-      <div style="border-top: 1px dashed var(--border); padding-top: 15px;">
+      <div style="margin-bottom: 15px;">
         <div class="row-label">BBFS 8 DIGIT</div>
-        <div class="digit-scroll">
-          ${pred.bbfs8.map(d => `<div class="digit-box">${d}</div>`).join('')}
-        </div>
+        <div class="digit-scroll">${pred.bbfs8.map(d => `<div class="digit-box">${d}</div>`).join('')}</div>
         <div class="wr-tag">WINRATE: ${bbfsWR}%</div>
       </div>
-
       <div>
         <div class="row-label">ANGKA IKUT 4 DIGIT</div>
-        <div class="digit-scroll">
-          ${pred.ai4.map(d => `<div class="digit-box">${d}</div>`).join('')}
-        </div>
+        <div class="digit-scroll">${pred.ai4.map(d => `<div class="digit-box">${d}</div>`).join('')}</div>
         <div class="wr-tag">WINRATE: ${aiWR}%</div>
       </div>
     </div>
