@@ -54,18 +54,11 @@ function normalizeScores(rawScores) {
   return normalized;
 }
 
-function getTopDigits(scoreMap, limit) {
-  return Object.entries(scoreMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([d]) => parseInt(d));
-}
-
 // ════════════════════════════════════════════
-// ENGINE ENSEMBLE
-// Formula: 35% Smoothed Markov, 30% Exponential Recency,
-//          20% Long-term Frequency, 10% Controlled Gap,
-//           5% Stability Filter
+// ENGINE ENSEMBLE - SHARP POLTAR MODE
+// Fokus utama: ranking AS, KOP, KEPALA, EKOR.
+// Formula: 40% Multi-source Markov, 35% Position Recency,
+//          15% Short Momentum, 7% Long Frequency, 3% Controlled Gap
 // ════════════════════════════════════════════
 function runEnsemble(results) {
   const n = results.length;
@@ -74,27 +67,28 @@ function runEnsemble(results) {
   const posData = [];
 
   const WEIGHTS = {
-    markov: 0.35,
-    recency: 0.30,
-    frequency: 0.20,
-    gap: 0.10,
-    stability: 0.05
+    markov: 0.40,
+    recency: 0.35,
+    momentum: 0.15,
+    frequency: 0.07,
+    gap: 0.03
   };
 
-  const MARKOV_ALPHA = 0.5;
-  const RECENCY_DECAY = 28;
-  const STABILITY_TOP = 4;
+  const MARKOV_ALPHA = 0.35;
+  const RECENCY_DECAY = 22;
+  const MOMENTUM_WINDOW = 12;
 
   for (let posOut = 0; posOut < 4; posOut++) {
     const scores = {};
     for (let d = 0; d <= 9; d++) scores[d] = 0;
 
-    // ── METODE 1: SMOOTHED MARKOV ──
-    // Membaca transisi posisi mana pun pada draw sebelumnya -> posisi output draw berikutnya.
-    // Smoothing menjaga Markov tetap stabil saat sampel transisi kecil.
-    let bestMarkovStrength = -1;
-    let markovRaw = {};
+    // ── METODE 1: MULTI-SOURCE SMOOTHED MARKOV ──
+    // Tidak lagi memilih 1 sumber terbaik saja.
+    // Semua posisi sumber AS/KOP/KEPALA/EKOR digabung sesuai kekuatan sinyalnya.
+    const markovRaw = {};
     for (let d = 0; d <= 9; d++) markovRaw[d] = 0;
+
+    let totalSourceStrength = 0;
 
     for (let posPat = 0; posPat < 4; posPat++) {
       const freqMap = {};
@@ -116,17 +110,23 @@ function runEnsemble(results) {
       }
 
       const sortedCandidate = Object.entries(candidate).sort((a, b) => b[1] - a[1]);
-      const strength = total * (sortedCandidate[0][1] - sortedCandidate[1][1]);
-      if (strength > bestMarkovStrength) {
-        bestMarkovStrength = strength;
-        markovRaw = candidate;
+      const edge = sortedCandidate[0][1] - sortedCandidate[1][1];
+      const sourceStrength = Math.max(0.15, total * edge);
+      totalSourceStrength += sourceStrength;
+
+      for (let d = 0; d <= 9; d++) {
+        markovRaw[d] += candidate[d] * sourceStrength;
       }
+    }
+
+    if (totalSourceStrength > 0) {
+      for (let d = 0; d <= 9; d++) markovRaw[d] /= totalSourceStrength;
     }
 
     const markovScore = normalizeScores(markovRaw);
 
-    // ── METODE 2: EXPONENTIAL RECENCY ──
-    // Semua 169 data tetap dipakai, tetapi data terbaru diberi bobot lebih besar.
+    // ── METODE 2: POSITION RECENCY ──
+    // Lebih responsif dibanding versi sebelumnya: decay 22.
     const recencyRaw = {};
     for (let d = 0; d <= 9; d++) recencyRaw[d] = 0;
     for (let i = 0; i < n; i++) {
@@ -137,8 +137,22 @@ function runEnsemble(results) {
     }
     const recencyScore = normalizeScores(recencyRaw);
 
-    // ── METODE 3: LONG-TERM FREQUENCY ──
-    // Menjadi jangkar stabil agar prediksi tidak terlalu reaktif ke data pendek.
+    // ── METODE 3: SHORT MOMENTUM ──
+    // Dorong digit yang sedang aktif di 12 data terakhir.
+    // Data paling baru mendapat bobot paling besar.
+    const momentumRaw = {};
+    for (let d = 0; d <= 9; d++) momentumRaw[d] = 0;
+    const startMomentum = Math.max(0, n - MOMENTUM_WINDOW);
+    for (let i = startMomentum; i < n; i++) {
+      const digit = parseInt(results[i][posOut]);
+      const age = n - 1 - i;
+      const weight = (MOMENTUM_WINDOW - age) / MOMENTUM_WINDOW;
+      momentumRaw[digit] += Math.max(weight, 0.1);
+    }
+    const momentumScore = normalizeScores(momentumRaw);
+
+    // ── METODE 4: LONG-TERM FREQUENCY ──
+    // Tetap dipakai kecil sebagai jangkar, bukan penentu utama.
     const frequencyRaw = {};
     for (let d = 0; d <= 9; d++) frequencyRaw[d] = 0;
     for (let i = 0; i < n; i++) {
@@ -146,8 +160,8 @@ function runEnsemble(results) {
     }
     const frequencyScore = normalizeScores(frequencyRaw);
 
-    // ── METODE 4: CONTROLLED GAP ──
-    // Gap tetap dipakai sebagai sinyal kecil, tetapi efeknya dibuat log agar tidak liar.
+    // ── METODE 5: CONTROLLED GAP ──
+    // Gap sangat kecil. Fungsinya hanya tie-breaker ringan.
     const lastSeen = {};
     const gapRaw = {};
     for (let d = 0; d <= 9; d++) {
@@ -163,31 +177,13 @@ function runEnsemble(results) {
     }
     const gapScore = normalizeScores(gapRaw);
 
-    // ── METODE 5: STABILITY FILTER ──
-    // Bonus untuk digit yang konsisten masuk top dari beberapa metode utama.
-    const stabilityRaw = {};
-    for (let d = 0; d <= 9; d++) stabilityRaw[d] = 0;
-
-    const topMarkov = getTopDigits(markovScore, STABILITY_TOP);
-    const topRecency = getTopDigits(recencyScore, STABILITY_TOP);
-    const topFrequency = getTopDigits(frequencyScore, STABILITY_TOP);
-    const topGap = getTopDigits(gapScore, STABILITY_TOP);
-
-    for (let d = 0; d <= 9; d++) {
-      if (topMarkov.includes(d)) stabilityRaw[d] += 1.25;
-      if (topRecency.includes(d)) stabilityRaw[d] += 1.00;
-      if (topFrequency.includes(d)) stabilityRaw[d] += 0.85;
-      if (topGap.includes(d)) stabilityRaw[d] += 0.40;
-    }
-    const stabilityScore = normalizeScores(stabilityRaw);
-
-    // ── FINAL SCORE ──
+    // ── FINAL POLTAR SCORE ──
     for (let d = 0; d <= 9; d++) {
       scores[d] += markovScore[d] * WEIGHTS.markov;
       scores[d] += recencyScore[d] * WEIGHTS.recency;
+      scores[d] += momentumScore[d] * WEIGHTS.momentum;
       scores[d] += frequencyScore[d] * WEIGHTS.frequency;
       scores[d] += gapScore[d] * WEIGHTS.gap;
-      scores[d] += stabilityScore[d] * WEIGHTS.stability;
     }
 
     // Normalisasi final ke 0-10 agar format UI tetap sama
@@ -204,7 +200,7 @@ function runEnsemble(results) {
     posData.push({ label: posLabels[posOut], sorted, normalized });
   }
 
-  // BBFS 8D & AI 4D dari gabungan KEP+EKR
+  // BBFS 8D & AI 4D dari gabungan KEP+EKR tetap mengikuti skor POLTAR terbaru
   const combined = {};
   for (let d = 0; d <= 9; d++) {
     combined[d] = (posData[2].normalized[d] + posData[3].normalized[d]) / 2;
