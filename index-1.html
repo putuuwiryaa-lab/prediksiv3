@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediksi 2D Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">MENGAMBIL DATA...</div>
+  </div>
+
+  <!-- RESULT PANEL (muncul saat pasaran diklik) -->
+  <div class="result-panel" id="resultPanel">
+    <div class="result-header">
+      <div class="back-btn" onclick="closeResult()">&#8592;</div>
+      <div>
+        <div class="result-title" id="resultTitle">-</div>
+        <div class="result-subtitle" id="resultSubtitle">-</div>
+      </div>
+    </div>
+    <div class="result-body" id="resultBody"></div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="app">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">PREDIKSI <span>2D</span> PRO</div>
+        <div class="badge">ENSEMBLE AI</div>
+      </div>
+      <div class="subtitle">Pilih pasaran untuk melihat prediksi</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">&#128269;</span>
+        <input class="search-box" type="text" id="searchBox"
+          placeholder="Cari pasaran..." oninput="filterMarkets()">
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow" style="display:none">
+      <div class="stat-chip">Total: <span id="statTotal">-</span></div>
+      <div class="stat-chip">Updated: <span id="statUpdated">-</span></div>
+    </div>
+
+    <!-- Market List -->
+    <div class="market-list" id="marketList">
+      <div class="empty-state">⏳ Memuat daftar pasaran...</div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
