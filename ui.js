@@ -80,12 +80,12 @@ function hideLoading() {
 }
 
 // ════════════════════════════════════════════
-// BUILD RESULT HTML (CHART ATAS, ANGKA BAWAH SERAGAM)
+// BUILD RESULT HTML (CHART ATAS, AREA TERPISAH)
 // ════════════════════════════════════════════
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
 
-  // 1. GENERATE CHARTS (BAGIAN ATAS)
+  // 1. GENERATE CHARTS (PALING ATAS)
   const chartsHTML = pred.posData.map((pos, pi) => {
     const maxScore = pos.sorted[0].score || 1;
     
@@ -108,7 +108,7 @@ function buildResultHTML(results, pred, market) {
       </div>`;
   }).join('');
 
-  // 2. GENERATE DIGITS (BAGIAN BAWAH - SEMUA WARNA SERAGAM)
+  // 2. GENERATE DIGITS POLTAR (SERAGAM)
   const digitRowsHTML = pred.posData.map((pos, pi) => {
     const boxes = pos.sorted.map((item) => 
       `<div class="digit-box">${item.digit}</div>`
@@ -127,10 +127,17 @@ function buildResultHTML(results, pred, market) {
   return `
     <div class="chart-section">${chartsHTML}</div>
 
+    <div class="section-title">POLTAR 4D</div>
     <div class="summary-section">
       ${digitRowsHTML}
-      
-      <div style="border-top: 1px dashed var(--border); padding-top: 15px;">
+      <div class="advisory-text">Manajemen Risiko: Pilih jumlah digit sesuai modal & target profit Anda.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">EKSEKUSI BERBEDA</div>
+    <div class="summary-section">
+      <div>
         <div class="row-label">BBFS 8 DIGIT</div>
         <div class="digit-scroll">
           ${pred.bbfs8.map(d => `<div class="digit-box">${d}</div>`).join('')}
