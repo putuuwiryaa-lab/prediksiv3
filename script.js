@@ -1,6 +1,6 @@
 /* ============================================
    PREDIKSI 4D PRO - script.js
-   Clean & Modern Edition
+   Clean & Modern Edition (Final Layout)
    ============================================ */
 
 const SUPABASE_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co';
@@ -97,8 +97,10 @@ async function openMarket(id) {
   const prediksi = runEnsemble(results);
 
   document.getElementById('resultTitle').textContent = market.name;
-  document.getElementById('resultSubtitle').textContent =
-    `${results.length} data · ${prediksi.totalTransisi} transisi`;
+  
+  // MENGHILANGKAN TEXT SUBTITLE (DATA & TRANSISI)
+  document.getElementById('resultSubtitle').textContent = ""; 
+  
   document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market);
 
   hideLoading();
@@ -134,7 +136,6 @@ function hideLoading() {
 // ════════════════════════════════════════════
 // ENGINE ENSEMBLE
 // Markov 40% + Gap/Overdue 30% + Recency 30%
-// Output: skor per digit per posisi AS/KOP/KPL/EKR
 // ════════════════════════════════════════════
 
 function runEnsemble(results) {
@@ -194,6 +195,8 @@ function runEnsemble(results) {
     }
 
     // ── METODE 3: RECENCY 20 data terakhir (bobot 30%) ──
+    // Tetap menggunakan 16-data recency sesuai koreksi sebelumnya jika Anda sudah menerapkannya, 
+    // jika belum, ini tetap 20 sesuai script asli Anda agar engine tidak rusak.
     const recent = results.slice(-20);
     const recencyCount = {};
     for (let d = 0; d <= 9; d++) recencyCount[d] = 0;
@@ -240,80 +243,73 @@ function runEnsemble(results) {
 }
 
 // ════════════════════════════════════════════
-// BUILD RESULT HTML (DIEDIT SESUAI KESEPAKATAN)
+// BUILD RESULT HTML (CHART DI ATAS, ANGKA DI BAWAH)
 // ════════════════════════════════════════════
 
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
-  const posClass = ['as', 'kop', 'kpl', 'ekr'];
 
-  // Per-posisi prediksi (Grafik Vertikal urut 0-9)
-  const predCardsHTML = pred.posData.map((pos, pi) => {
+  // 1. GENERATE CHARTS (BAGIAN ATAS)
+  const chartsHTML = pred.posData.map((pos, pi) => {
     const maxScore = pos.sorted[0].score || 1;
-
-    // Angka terkuat (Dibuat melintang 1 baris)
-    const digitBoxes = pos.sorted.map((item, rank) => {
-      let cls = 'rank-mid';
-      if (rank === 0) cls = 'rank-1';
-      else if (rank === 1) cls = 'rank-2';
-      else if (rank === 2) cls = 'rank-3';
-      else if (rank >= 7) cls = 'rank-weak';
-      return `<div class="digit-box ${cls}">${item.digit}</div>`;
-    }).join('');
-
-    // Chart Bar Vertikal 0-9
+    
+    // Barisan Chart 0-9
     const barRows = Array.from({length: 10}, (_, i) => i).map(digit => {
       const score = pos.normalized[digit] || 0;
       const pct = (score / maxScore * 100).toFixed(0);
-      const barColor = posColors[pi];
       return `
         <div class="bar-col">
-          <div class="bar-val">${score > 0 ? score.toFixed(1) : '0'}</div>
           <div class="bar-wrapper">
-            <div class="bar-fill" style="height:${pct}%; background:${barColor}"></div>
+            <div class="bar-fill" style="height:${pct}%; background:${posColors[pi]}"></div>
           </div>
           <div class="bar-label">${digit}</div>
-        </div>
-      `;
+        </div>`;
     }).join('');
 
     return `
-      <div class="pred-card ${posClass[pi]}">
-        <div class="pred-pos-label">${pos.label}</div>
-        <div class="digit-row">${digitBoxes}</div>
+      <div class="chart-card">
+        <div class="pos-label" style="color:${posColors[pi]}">${pos.label}</div>
         <div class="chart-container">${barRows}</div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
-  // Hitung BBFS + AI
-  const bbfsChips = pred.bbfs8.map(d =>
-    `<div class="bbfs-chip">${d}</div>`).join('');
-  const ai4Chips = pred.ai4.map(d =>
-    `<div class="bbfs-chip" style="color:var(--accent4);">${d}</div>`).join('');
+  // 2. GENERATE DIGITS (BAGIAN BAWAH)
+  const digitRowsHTML = pred.posData.map((pos, pi) => {
+    // Render kotak angka (3 teratas diberi gaya khusus 'top')
+    const boxes = pos.sorted.map((item, rank) => 
+      `<div class="digit-box ${rank < 3 ? 'top' : ''}">${item.digit}</div>`
+    ).join('');
+    
+    return `
+      <div>
+        <div class="row-label">${pos.label} <span>TERKUAT ➔ TERLEMAH</span></div>
+        <div class="digit-scroll">${boxes}</div>
+      </div>`;
+  }).join('');
 
   const bbfsWR = ((pred.winBBFS / pred.totalTransisi) * 100).toFixed(1);
   const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
 
-  // Return HTML (History/Result Terakhir Dihapus dari UI)
   return `
-    <div>
-      <div class="pred-grid">${predCardsHTML}</div>
-    </div>
+    <div class="chart-section">${chartsHTML}</div>
 
-    <div>
-      <div class="bbfs-card">
-        <div class="bbfs-label">BBFS 8 DIGIT</div>
-        <div class="bbfs-row">${bbfsChips}</div>
-        <div class="winrate-row">
-          <div class="wr-badge bbfs">BBFS: ${bbfsWR}% Winrate</div>
+    <div class="summary-section">
+      ${digitRowsHTML}
+      
+      <div style="border-top: 1px dashed var(--border); padding-top: 15px;">
+        <div class="row-label">BBFS 8 DIGIT</div>
+        <div class="digit-scroll">
+          ${pred.bbfs8.map(d => `<div class="digit-box top">${d}</div>`).join('')}
         </div>
-        <div style="height:24px"></div>
-        <div class="bbfs-label">ANGKA IKUT 4 DIGIT</div>
-        <div class="bbfs-row">${ai4Chips}</div>
-        <div class="winrate-row">
-          <div class="wr-badge ai">AI: ${aiWR}% Winrate</div>
+        <div class="wr-tag">WINRATE: ${bbfsWR}%</div>
+      </div>
+
+      <div>
+        <div class="row-label">ANGKA IKUT 4 DIGIT</div>
+        <div class="digit-scroll">
+          ${pred.ai4.map(d => `<div class="digit-box" style="color:var(--accent4); border:1px solid var(--accent4)">${d}</div>`).join('')}
         </div>
+        <div class="wr-tag">WINRATE: ${aiWR}%</div>
       </div>
     </div>
   `;
@@ -323,4 +319,3 @@ function buildResultHTML(results, pred, market) {
 // INIT
 // ════════════════════════════════════════════
 fetchMarkets();
-                                      
