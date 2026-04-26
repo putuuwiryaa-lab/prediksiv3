@@ -87,11 +87,14 @@ function buildResultHTML(results, pred, market) {
 
   // 1. GENERATE CHARTS (PALING ATAS)
   const chartsHTML = pred.posData.map((pos, pi) => {
-    const maxScore = pos.sorted[0].score || 1;
+    const scoreValues = Object.values(pos.normalized || {});
+    const minScore = Math.min(...scoreValues);
+    const maxScore = Math.max(...scoreValues) || 1;
+    const scoreRange = Math.max(maxScore - minScore, 0.0001);
     
     const barRows = Array.from({length: 10}, (_, i) => i).map(digit => {
       const score = pos.normalized[digit] || 0;
-      const pct = (score / maxScore * 100).toFixed(0);
+      const pct = Math.max(8, ((maxScore - score) / scoreRange) * 100).toFixed(0);
       return `
         <div class="bar-col">
           <div class="bar-wrapper">
