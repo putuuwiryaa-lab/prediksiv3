@@ -9,6 +9,9 @@ const DOT_COLORS = [
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
+let resultPanelOpen = false;
+let internalClosing = false;
+
 function escapeHTML(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -25,6 +28,40 @@ function safeId(value) {
 function getHistoryTokens(raw) {
   return (raw || '').trim().split(/\s+/).filter(t => /^\d{4}$/.test(t));
 }
+
+function showResultPanel() {
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('show');
+
+  if (!resultPanelOpen) {
+    resultPanelOpen = true;
+    history.pushState({ panel: 'result' }, '', '#result');
+  }
+}
+
+function closeResult(skipHistoryBack = false) {
+  const panel = document.getElementById('resultPanel');
+  panel.classList.remove('show');
+
+  if (resultPanelOpen) {
+    resultPanelOpen = false;
+    if (!skipHistoryBack && location.hash === '#result') {
+      internalClosing = true;
+      history.back();
+    }
+  }
+}
+
+window.addEventListener('popstate', () => {
+  if (internalClosing) {
+    internalClosing = false;
+    return;
+  }
+
+  if (resultPanelOpen) {
+    closeResult(true);
+  }
+});
 
 // ════════════════════════════════════════════
 // RENDER MARKET LIST
@@ -93,7 +130,7 @@ async function openMarket(id) {
     document.getElementById('resultTitle').textContent = market.name;
     document.getElementById('resultBody').innerHTML = buildInsufficientDataHTML(results.length);
     hideLoading();
-    document.getElementById('resultPanel').classList.add('show');
+    showResultPanel();
     return;
   }
 
@@ -103,11 +140,7 @@ async function openMarket(id) {
   document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market);
 
   hideLoading();
-  document.getElementById('resultPanel').classList.add('show');
-}
-
-function closeResult() {
-  document.getElementById('resultPanel').classList.remove('show');
+  showResultPanel();
 }
 
 function showLoading(txt) {
