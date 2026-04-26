@@ -9,6 +9,8 @@ const DOT_COLORS = [
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
+const PREMIUM_APP_URL = '#';
+
 let resultPanelOpen = false;
 let internalClosing = false;
 
@@ -27,6 +29,39 @@ function safeId(value) {
 
 function getHistoryTokens(raw) {
   return (raw || '').trim().split(/\s+/).filter(t => /^\d{4}$/.test(t));
+}
+
+function setupPremiumBanner() {
+  const app = document.querySelector('.app');
+  const searchWrap = document.querySelector('.search-wrap');
+  if (!app || !searchWrap || document.getElementById('premiumAd')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'premiumAd';
+  banner.className = 'premium-ad';
+  banner.setAttribute('role', 'button');
+  banner.setAttribute('tabindex', '0');
+  banner.innerHTML = `
+    <div class="premium-ad-top">
+      <div class="premium-ad-badge">PREMIUM</div>
+      <div class="premium-ad-title">ANALISA ANGKA</div>
+    </div>
+    <div class="premium-ad-text">Versi lebih lengkap dari Prediksi V3: Angka Ikut, Angka Mati, Jumlah, Shio & Rekap.</div>
+    <div class="premium-ad-cta">BUKA APLIKASI PREMIUM →</div>
+  `;
+  banner.addEventListener('click', openPremiumApp);
+  banner.addEventListener('keydown', event => {
+    if (event.key === 'Enter') openPremiumApp();
+  });
+  app.insertBefore(banner, searchWrap);
+}
+
+function openPremiumApp() {
+  if (!PREMIUM_APP_URL || PREMIUM_APP_URL === '#') {
+    alert('Link aplikasi premium belum diatur.');
+    return;
+  }
+  window.open(PREMIUM_APP_URL, '_blank', 'noopener,noreferrer');
 }
 
 function showResultPanel() {
@@ -170,7 +205,6 @@ function buildInsufficientDataHTML(count) {
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
 
-  // 1. GENERATE CHARTS (PALING ATAS)
   const chartsHTML = pred.posData.map((pos, pi) => {
     const scoreValues = Object.values(pos.normalized || {});
     const minScore = Math.min(...scoreValues);
@@ -199,7 +233,6 @@ function buildResultHTML(results, pred, market) {
       </div>`;
   }).join('');
 
-  // 2. GENERATE DIGITS POLTAR (TOP 3 HIGHLIGHT)
   const digitRowsHTML = pred.posData.map((pos) => {
     const boxes = pos.sorted.map((item, idx) => {
       const rankClass = idx === 0 ? 'rank-1' : idx < 3 ? 'rank-top' : idx > 6 ? 'rank-low' : '';
@@ -251,4 +284,5 @@ function buildResultHTML(results, pred, market) {
 // ════════════════════════════════════════════
 // INIT SISTEM
 // ════════════════════════════════════════════
+setupPremiumBanner();
 fetchMarkets();
