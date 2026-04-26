@@ -2,61 +2,68 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prediksi 2D Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Prediksi 4D Pro | Ensemble Engine</title>
+  
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
+  
+  <meta name="theme-color" content="#03050a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
-  <!-- LOADING SCREEN -->
   <div class="loading-screen" id="loadingScreen">
     <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">MENGAMBIL DATA...</div>
+    <div class="loading-text" id="loadingText">INITIALIZING SYSTEM...</div>
   </div>
 
-  <!-- RESULT PANEL (muncul saat pasaran diklik) -->
   <div class="result-panel" id="resultPanel">
     <div class="result-header">
-      <div class="back-btn" onclick="closeResult()">&#8592;</div>
+      <div class="back-btn" onclick="closeResult()" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </div>
       <div>
-        <div class="result-title" id="resultTitle">-</div>
-        <div class="result-subtitle" id="resultSubtitle">-</div>
+        <div class="result-title" id="resultTitle">LOADING...</div>
+        <div class="result-subtitle" id="resultSubtitle">ANALYZING DATA STREAM</div>
       </div>
     </div>
+    
     <div class="result-body" id="resultBody"></div>
   </div>
 
-  <!-- MAIN APP -->
   <div class="app">
 
-    <!-- Header -->
     <div class="header">
       <div class="header-top">
-        <div class="logo">PREDIKSI <span>2D</span> PRO</div>
-        <div class="badge">ENSEMBLE AI</div>
+        <div class="logo">PREDIKSI <span>4D</span> PRO</div>
+        <div class="badge">ENSEMBLE ENGINE</div>
       </div>
-      <div class="subtitle">Pilih pasaran untuk melihat prediksi</div>
+      <div class="subtitle">Data-driven numerical analysis system</div>
     </div>
 
-    <!-- Search -->
     <div class="search-wrap">
       <div class="search-wrap-inner">
-        <span class="search-icon">&#128269;</span>
-        <input class="search-box" type="text" id="searchBox"
-          placeholder="Cari pasaran..." oninput="filterMarkets()">
+        <span class="search-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input class="search-box" type="text" id="searchBox" 
+          placeholder="Cari pasaran..." oninput="filterMarkets()" autocomplete="off">
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="stats-row" id="statsRow" style="display:none">
-      <div class="stat-chip">Total: <span id="statTotal">-</span></div>
-      <div class="stat-chip">Updated: <span id="statUpdated">-</span></div>
+      <div class="stat-chip">DATABASE: <span id="statTotal">0</span></div>
+      <div class="stat-chip">LAST SYNC: <span id="statUpdated">00:00</span></div>
     </div>
 
-    <!-- Market List -->
     <div class="market-list" id="marketList">
-      <div class="empty-state">⏳ Memuat daftar pasaran...</div>
+      <div class="empty-state">
+        <div class="spinner" style="width:24px; height:24px; margin: 0 auto 12px;"></div>
+        ⏳ MENGHUBUNGKAN KE SERVER...
+      </div>
     </div>
 
   </div>
