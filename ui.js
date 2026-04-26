@@ -170,13 +170,6 @@ function buildInsufficientDataHTML(count) {
 function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
 
-  const modeInfo = `
-    <div class="mode-strip">
-      <div class="mode-chip">REVERSE EXTREME</div>
-      <div class="mode-text">SKOR RENDAH = KUAT • BAR TINGGI = KUAT • DATA: ${results.length}</div>
-    </div>
-  `;
-
   // 1. GENERATE CHARTS (PALING ATAS)
   const chartsHTML = pred.posData.map((pos, pi) => {
     const scoreValues = Object.values(pos.normalized || {});
@@ -224,7 +217,6 @@ function buildResultHTML(results, pred, market) {
   const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
 
   return `
-    ${modeInfo}
     <div class="chart-section">${chartsHTML}</div>
 
     <div class="section-title">POLTAR 4D</div>
