@@ -3,9 +3,7 @@
    Core Logic, Data Fetching & Math Models
    ============================================ */
 
-const SUPABASE_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTM2NDYsImV4cCI6MjA5MjU4OTY0Nn0.MBl-9xqRmm0FxCuzuQR68zFKGkWY_yVV4I05yI1KM2U';
-
+const MARKETS_API_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co/functions/v1/get-markets';
 let allMarkets = [];
 
 // ════════════════════════════════════════════
