@@ -14,6 +14,7 @@ const DEFAULT_POLTAR_LIMIT = 7;
 const MAX_EVALUATION_HISTORY = 14;
 
 let resultPanelOpen = false;
+let historyPageOpen = false;
 let internalClosing = false;
 
 function escapeHTML(value) {
@@ -80,9 +81,42 @@ function closeResult(skipHistoryBack = false) {
   const panel = document.getElementById('resultPanel');
   panel.classList.remove('show');
 
+  if (historyPageOpen) closeHistoryPage(true);
+
   if (resultPanelOpen) {
     resultPanelOpen = false;
     if (!skipHistoryBack && location.hash === '#result') {
+      internalClosing = true;
+      history.back();
+    }
+  }
+}
+
+function openHistoryPage(marketId) {
+  const historyState = loadMarketHistory(marketId);
+  const market = allMarkets.find(m => String(m.id) === String(marketId));
+  const page = document.getElementById('historyPage');
+  const body = document.getElementById('historyPageBody');
+  const title = document.getElementById('historyTitle');
+  if (!page || !body) return;
+
+  if (title) title.textContent = market ? `RIWAYAT ${market.name}` : 'RIWAYAT EVALUASI';
+  body.innerHTML = buildHistoryPageContent(historyState.evaluations || []);
+  page.classList.add('show');
+
+  if (!historyPageOpen) {
+    historyPageOpen = true;
+    history.pushState({ panel: 'history' }, '', '#history');
+  }
+}
+
+function closeHistoryPage(skipHistoryBack = false) {
+  const page = document.getElementById('historyPage');
+  if (page) page.classList.remove('show');
+
+  if (historyPageOpen) {
+    historyPageOpen = false;
+    if (!skipHistoryBack && location.hash === '#history') {
       internalClosing = true;
       history.back();
     }
@@ -95,16 +129,13 @@ window.addEventListener('popstate', () => {
     return;
   }
 
+  if (historyPageOpen) {
+    closeHistoryPage(true);
+    return;
+  }
+
   if (resultPanelOpen) closeResult(true);
 });
-
-function toggleEvaluationHistory() {
-  const panel = document.getElementById('evaluationHistoryPanel');
-  const btn = document.getElementById('evaluationHistoryBtn');
-  if (!panel) return;
-  const isOpen = panel.classList.toggle('show');
-  if (btn) btn.textContent = isOpen ? 'TUTUP RIWAYAT EVALUASI' : 'LIHAT RIWAYAT EVALUASI';
-}
 
 // ════════════════════════════════════════════
 // PREDICTION HISTORY / EVALUATION
@@ -330,9 +361,6 @@ async function refreshMarkets() {
   }
 }
 
-// ════════════════════════════════════════════
-// UI INTERACTIONS
-// ════════════════════════════════════════════
 async function openMarket(id) {
   const market = allMarkets.find(m => m.id === id);
   if (!market) return;
@@ -425,12 +453,11 @@ function buildEvaluationHTML(evaluation) {
   `;
 }
 
-function buildEvaluationHistoryHTML(evaluations) {
+function buildHistoryRows(evaluations) {
   const items = trimEvaluations(evaluations);
-  const disabled = items.length ? '' : 'disabled';
-  const emptyText = items.length ? '' : '<div class="history-empty">Belum ada riwayat evaluasi tersimpan.</div>';
+  if (!items.length) return '<div class="history-empty">Belum ada riwayat evaluasi tersimpan.</div>';
 
-  const rows = items.map((evaluation) => `
+  return items.map((evaluation) => `
     <div class="history-card">
       <div class="history-title">TRANSISI RESULT ${escapeHTML(evaluation.fromResult)} → ${escapeHTML(evaluation.newResult)}</div>
       <div class="eval-grid compact">
@@ -444,16 +471,26 @@ function buildEvaluationHistoryHTML(evaluations) {
       ${buildRankGrid(evaluation.poltarRanks)}
     </div>
   `).join('');
+}
 
+function buildHistoryPageContent(evaluations) {
+  const items = trimEvaluations(evaluations);
   return `
-    <button class="history-toggle" id="evaluationHistoryBtn" onclick="toggleEvaluationHistory()" type="button" ${disabled}>
-      LIHAT RIWAYAT EVALUASI
-    </button>
-    <div class="history-panel" id="evaluationHistoryPanel">
+    <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
+    <div class="history-panel show page-mode">
       <div class="history-panel-title">RIWAYAT EVALUASI TERSIMPAN (${items.length}/14)</div>
-      ${emptyText}
-      ${rows}
+      ${buildHistoryRows(items)}
     </div>
+  `;
+}
+
+function buildEvaluationHistoryButton(marketId, evaluations) {
+  const items = trimEvaluations(evaluations);
+  const disabled = items.length ? '' : 'disabled';
+  return `
+    <button class="history-toggle" onclick="openHistoryPage('${escapeHTML(String(marketId))}')" type="button" ${disabled}>
+      BUKA HALAMAN RIWAYAT EVALUASI
+    </button>
   `;
 }
 
@@ -478,9 +515,6 @@ function buildNextPoltarHTML(choices) {
   `;
 }
 
-// ════════════════════════════════════════════
-// BUILD RESULT HTML (CHART ATAS, AREA TERPISAH)
-// ════════════════════════════════════════════
 function buildResultHTML(results, pred, market, historyState) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
   const nextChoices = getNextPoltarChoices(pred, historyState?.history || {});
@@ -563,12 +597,9 @@ function buildResultHTML(results, pred, market, historyState) {
     <div class="divider"></div>
     ${buildNextPoltarHTML(nextChoices)}
     ${buildEvaluationHTML(historyState?.evaluation)}
-    ${buildEvaluationHistoryHTML(evaluations)}
+    ${buildEvaluationHistoryButton(market.id, evaluations)}
   `;
 }
 
-// ════════════════════════════════════════════
-// INIT SISTEM
-// ════════════════════════════════════════════
 setupPremiumBanner();
 fetchMarkets();
