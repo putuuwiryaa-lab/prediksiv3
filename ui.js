@@ -561,9 +561,9 @@ function buildResultHTML(results, pred, market, historyState) {
     </div>
 
     <div class="divider"></div>
+    ${buildNextPoltarHTML(nextChoices)}
     ${buildEvaluationHTML(historyState?.evaluation)}
     ${buildEvaluationHistoryHTML(evaluations)}
-    ${buildNextPoltarHTML(nextChoices)}
   `;
 }
 
