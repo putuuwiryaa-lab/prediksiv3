@@ -9,7 +9,6 @@ const DOT_COLORS = [
 ];
 
 const PREMIUM_APP_URL = 'https://analisaangka.online';
-const HISTORY_PREFIX = 'prediksiv3_eval_';
 const DEFAULT_POLTAR_LIMIT = 7;
 const POLTAR_RANGE_SIZE = 3;
 const MAX_EVALUATION_HISTORY = 14;
@@ -23,7 +22,7 @@ function escapeHTML(value) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -33,6 +32,10 @@ function safeId(value) {
 
 function getHistoryTokens(raw) {
   return (raw || '').trim().split(/\s+/).filter(t => /^\d{4}$/.test(t));
+}
+
+function toDigitList(value) {
+  return Array.isArray(value) ? value.map(v => String(v)) : [];
 }
 
 function setupPremiumBanner() {
@@ -94,15 +97,15 @@ function closeResult(skipHistoryBack = false) {
 }
 
 function openHistoryPage(marketId) {
-  const historyState = loadMarketHistory(marketId);
   const market = allMarkets.find(m => String(m.id) === String(marketId));
   const page = document.getElementById('historyPage');
   const body = document.getElementById('historyPageBody');
   const title = document.getElementById('historyTitle');
   if (!page || !body) return;
 
+  const evaluations = getMarketEvaluations(market);
   if (title) title.textContent = market ? `RIWAYAT ${market.name}` : 'RIWAYAT EVALUASI';
-  body.innerHTML = buildHistoryPageContent(historyState.evaluations || []);
+  body.innerHTML = buildHistoryPageContent(evaluations);
   page.classList.add('show');
 
   if (!historyPageOpen) {
@@ -139,131 +142,44 @@ window.addEventListener('popstate', () => {
 });
 
 // ════════════════════════════════════════════
-// PREDICTION HISTORY / EVALUATION
+// SERVER EVALUATION HELPERS
 // ════════════════════════════════════════════
-function getMarketHistoryKey(marketId) {
-  return `${HISTORY_PREFIX}${marketId}`;
-}
-
 function trimEvaluations(evaluations) {
   return (Array.isArray(evaluations) ? evaluations : []).slice(0, MAX_EVALUATION_HISTORY);
 }
 
-function loadMarketHistory(marketId) {
-  try {
-    const raw = localStorage.getItem(getMarketHistoryKey(marketId));
-    if (!raw) return { evaluations: [] };
-    const parsed = JSON.parse(raw);
-    return {
-      lastBaseResult: parsed.lastBaseResult || null,
-      lastPrediction: parsed.lastPrediction || null,
-      lastEvaluation: parsed.lastEvaluation || null,
-      evaluations: trimEvaluations(parsed.evaluations)
-    };
-  } catch {
-    return { evaluations: [] };
-  }
-}
+function normalizeEvaluation(row) {
+  if (!row) return null;
 
-function saveMarketHistory(marketId, history) {
-  try {
-    history.evaluations = trimEvaluations(history.evaluations);
-    localStorage.setItem(getMarketHistoryKey(marketId), JSON.stringify(history));
-  } catch {
-    // localStorage bisa penuh/private mode. Abaikan agar app tetap jalan.
-  }
-}
-
-function makePredictionSnapshot(pred, baseResult) {
   return {
-    baseResult,
-    savedAt: new Date().toISOString(),
-    bbfs8: pred.bbfs8.map(String),
-    ai4: pred.ai4.map(String),
-    poltar: {
-      as: pred.posData[0].sorted.map(item => String(item.digit)),
-      kop: pred.posData[1].sorted.map(item => String(item.digit)),
-      kepala: pred.posData[2].sorted.map(item => String(item.digit)),
-      ekor: pred.posData[3].sorted.map(item => String(item.digit))
+    fromResult: row.from_result ?? row.fromResult,
+    newResult: row.new_result ?? row.newResult,
+    bbfsStatus: row.bbfs_status ?? row.bbfsStatus,
+    aiStatus: row.ai_status ?? row.aiStatus,
+    evaluatedAt: row.evaluated_at ?? row.evaluatedAt,
+    poltarRanks: {
+      as: row.rank_as ?? row.poltarRanks?.as ?? null,
+      kop: row.rank_kop ?? row.poltarRanks?.kop ?? null,
+      kepala: row.rank_kepala ?? row.poltarRanks?.kepala ?? null,
+      ekor: row.rank_ekor ?? row.poltarRanks?.ekor ?? null
     }
   };
 }
 
-function evaluateBBFS(bbfs8, result) {
-  const set = new Set((bbfs8 || []).map(String));
-  const asHit = set.has(result[0]);
-  const kopHit = set.has(result[1]);
-  const kepalaHit = set.has(result[2]);
-  const ekorHit = set.has(result[3]);
-
-  let status = 'ZONK';
-  if (asHit && kopHit && kepalaHit && ekorHit) status = '4D';
-  else if (kopHit && kepalaHit && ekorHit) status = '3D';
-  else if (kepalaHit && ekorHit) status = '2D';
-
-  return { status, hits: { as: asHit, kop: kopHit, kepala: kepalaHit, ekor: ekorHit } };
+function getMarketEvaluations(market) {
+  const rows = trimEvaluations(market?.prediction_evaluations || []);
+  return rows
+    .map(normalizeEvaluation)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.evaluatedAt || 0) - new Date(a.evaluatedAt || 0));
 }
 
-function evaluateAI(ai4, result) {
-  const set = new Set((ai4 || []).map(String));
-  const masuk = result.split('').some(d => set.has(d));
-  return { status: masuk ? 'MASUK' : 'ZONK' };
+function getLatestEvaluation(market) {
+  return getMarketEvaluations(market)[0] || null;
 }
 
-function findRank(list, digit) {
-  const idx = (list || []).map(String).findIndex(d => d === String(digit));
-  return idx >= 0 ? idx + 1 : null;
-}
-
-function evaluatePoltar(poltar, result) {
-  return {
-    as: findRank(poltar?.as, result[0]),
-    kop: findRank(poltar?.kop, result[1]),
-    kepala: findRank(poltar?.kepala, result[2]),
-    ekor: findRank(poltar?.ekor, result[3])
-  };
-}
-
-function buildEvaluation(previousPrediction, newResult) {
-  const bbfs = evaluateBBFS(previousPrediction.bbfs8, newResult);
-  const ai = evaluateAI(previousPrediction.ai4, newResult);
-  const poltarRanks = evaluatePoltar(previousPrediction.poltar, newResult);
-
-  return {
-    fromResult: previousPrediction.baseResult,
-    newResult,
-    bbfsStatus: bbfs.status,
-    bbfsHits: bbfs.hits,
-    aiStatus: ai.status,
-    poltarRanks,
-    evaluatedAt: new Date().toISOString()
-  };
-}
-
-function processPredictionHistory(market, results, pred) {
-  const latestResult = results[results.length - 1];
-  const history = loadMarketHistory(market.id);
-  let evaluation = history.lastEvaluation || null;
-
-  if (history.lastPrediction && history.lastBaseResult && history.lastBaseResult !== latestResult) {
-    const alreadyEvaluated = history.lastEvaluation &&
-      history.lastEvaluation.fromResult === history.lastBaseResult &&
-      history.lastEvaluation.newResult === latestResult;
-
-    if (!alreadyEvaluated) {
-      evaluation = buildEvaluation(history.lastPrediction, latestResult);
-      history.lastEvaluation = evaluation;
-      history.evaluations = trimEvaluations([evaluation, ...(history.evaluations || [])]);
-    }
-  }
-
-  if (!history.lastBaseResult || history.lastBaseResult !== latestResult) {
-    history.lastBaseResult = latestResult;
-    history.lastPrediction = makePredictionSnapshot(pred, latestResult);
-  }
-
-  saveMarketHistory(market.id, history);
-  return { evaluation, history };
+function getMarketSnapshot(market) {
+  return market?.prediction_snapshot || null;
 }
 
 function getDenseRankRange(ranks) {
@@ -325,19 +241,38 @@ function getPoltarRankRanges(evaluations) {
   return ranges;
 }
 
-function getNextPoltarChoices(pred, history) {
-  const ranges = getPoltarRankRanges(history?.evaluations || []);
-  const map = [
-    ['as', pred.posData[0]], ['kop', pred.posData[1]],
-    ['kepala', pred.posData[2]], ['ekor', pred.posData[3]]
-  ];
+function getFallbackPoltarLists(pred) {
+  return {
+    as: pred.posData[0].sorted.map(item => String(item.digit)),
+    kop: pred.posData[1].sorted.map(item => String(item.digit)),
+    kepala: pred.posData[2].sorted.map(item => String(item.digit)),
+    ekor: pred.posData[3].sorted.map(item => String(item.digit))
+  };
+}
+
+function getSnapshotPoltarLists(snapshot, pred) {
+  const fallback = getFallbackPoltarLists(pred);
+  if (!snapshot) return fallback;
+
+  return {
+    as: toDigitList(snapshot.poltar_as).length ? toDigitList(snapshot.poltar_as) : fallback.as,
+    kop: toDigitList(snapshot.poltar_kop).length ? toDigitList(snapshot.poltar_kop) : fallback.kop,
+    kepala: toDigitList(snapshot.poltar_kepala).length ? toDigitList(snapshot.poltar_kepala) : fallback.kepala,
+    ekor: toDigitList(snapshot.poltar_ekor).length ? toDigitList(snapshot.poltar_ekor) : fallback.ekor
+  };
+}
+
+function getNextPoltarChoices(pred, market) {
+  const evaluations = getMarketEvaluations(market);
+  const ranges = getPoltarRankRanges(evaluations);
+  const lists = getSnapshotPoltarLists(getMarketSnapshot(market), pred);
 
   const choices = {};
-  map.forEach(([key, pos]) => {
+  Object.keys(lists).forEach(key => {
     const range = ranges[key];
-    choices[key] = pos.sorted
+    choices[key] = lists[key]
       .slice(range.start - 1, range.end)
-      .map(item => item.digit);
+      .map(d => String(d));
   });
 
   return choices;
@@ -410,10 +345,9 @@ async function openMarket(id) {
   }
 
   const prediksi = runEnsemble(results);
-  const historyState = processPredictionHistory(market, results, prediksi);
 
   document.getElementById('resultTitle').textContent = market.name;
-  document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market, historyState);
+  document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market);
 
   hideLoading();
   showResultPanel();
@@ -462,7 +396,7 @@ function buildEvaluationHTML(evaluation) {
     return `
       <div class="eval-card muted-eval">
         <div class="eval-title">EVALUASI PREDIKSI TERAKHIR</div>
-        <div class="eval-note">Belum ada result baru untuk dievaluasi. Prediksi saat ini sudah disimpan untuk result berikutnya.</div>
+        <div class="eval-note">Belum ada result baru untuk dievaluasi. Riwayat akan muncul setelah scraper mendeteksi result berubah.</div>
       </div>
     `;
   }
@@ -470,7 +404,7 @@ function buildEvaluationHTML(evaluation) {
   return `
     <div class="eval-card">
       <div class="eval-title">EVALUASI PREDIKSI TERAKHIR</div>
-      <div class="eval-subtitle">Terhadap result baru: <strong>${escapeHTML(evaluation.newResult)}</strong></div>
+      <div class="eval-subtitle">Transisi result: <strong>${escapeHTML(evaluation.fromResult)} → ${escapeHTML(evaluation.newResult)}</strong></div>
       <div class="eval-grid">
         <div class="eval-pill ${evaluation.bbfsStatus === 'ZONK' ? 'bad' : 'good'}">
           <span>BBFS</span><strong>${escapeHTML(evaluation.bbfsStatus)}</strong>
@@ -507,7 +441,7 @@ function buildHistoryRows(evaluations) {
 function buildHistoryPageContent(evaluations) {
   const items = trimEvaluations(evaluations);
   return `
-    <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
+    <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir dari Supabase. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
     <div class="history-panel show page-mode">
       <div class="history-panel-title">RIWAYAT EVALUASI TERSIMPAN (${items.length}/14)</div>
       ${buildHistoryRows(items)}
@@ -530,7 +464,7 @@ function buildNextPoltarHTML(choices) {
     <div class="next-row">
       <div class="next-label">${label}</div>
       <div class="next-digits">
-        ${digits.map(d => `<div class="next-digit">${d}</div>`).join('')}
+        ${digits.map(d => `<div class="next-digit">${escapeHTML(d)}</div>`).join('')}
       </div>
     </div>
   `;
@@ -546,10 +480,11 @@ function buildNextPoltarHTML(choices) {
   `;
 }
 
-function buildResultHTML(results, pred, market, historyState) {
+function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
-  const nextChoices = getNextPoltarChoices(pred, historyState?.history || {});
-  const evaluations = historyState?.history?.evaluations || [];
+  const evaluations = getMarketEvaluations(market);
+  const evaluation = getLatestEvaluation(market);
+  const nextChoices = getNextPoltarChoices(pred, market);
 
   const chartsHTML = pred.posData.map((pos, pi) => {
     const scoreValues = Object.values(pos.normalized || {});
@@ -627,7 +562,7 @@ function buildResultHTML(results, pred, market, historyState) {
 
     <div class="divider"></div>
     ${buildNextPoltarHTML(nextChoices)}
-    ${buildEvaluationHTML(historyState?.evaluation)}
+    ${buildEvaluationHTML(evaluation)}
     ${buildEvaluationHistoryButton(market.id, evaluations)}
   `;
 }
