@@ -95,10 +95,16 @@ window.addEventListener('popstate', () => {
     return;
   }
 
-  if (resultPanelOpen) {
-    closeResult(true);
-  }
+  if (resultPanelOpen) closeResult(true);
 });
+
+function toggleEvaluationHistory() {
+  const panel = document.getElementById('evaluationHistoryPanel');
+  const btn = document.getElementById('evaluationHistoryBtn');
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('show');
+  if (btn) btn.textContent = isOpen ? 'TUTUP RIWAYAT EVALUASI' : 'LIHAT RIWAYAT EVALUASI';
+}
 
 // ════════════════════════════════════════════
 // PREDICTION HISTORY / EVALUATION
@@ -163,10 +169,7 @@ function evaluateBBFS(bbfs8, result) {
   else if (kopHit && kepalaHit && ekorHit) status = '3D';
   else if (kepalaHit && ekorHit) status = '2D';
 
-  return {
-    status,
-    hits: { as: asHit, kop: kopHit, kepala: kepalaHit, ekor: ekorHit }
-  };
+  return { status, hits: { as: asHit, kop: kopHit, kepala: kepalaHit, ekor: ekorHit } };
 }
 
 function evaluateAI(ai4, result) {
@@ -266,10 +269,8 @@ function getPoltarLimits(evaluations) {
 function getNextPoltarChoices(pred, history) {
   const limits = getPoltarLimits(history?.evaluations || []);
   const map = [
-    ['as', pred.posData[0]],
-    ['kop', pred.posData[1]],
-    ['kepala', pred.posData[2]],
-    ['ekor', pred.posData[3]]
+    ['as', pred.posData[0]], ['kop', pred.posData[1]],
+    ['kepala', pred.posData[2]], ['ekor', pred.posData[3]]
   ];
 
   const choices = {};
@@ -306,9 +307,7 @@ function renderMarkets(markets) {
   }).join('');
 
   list.querySelectorAll('.market-card').forEach(card => {
-    card.addEventListener('click', () => {
-      openMarket(decodeURIComponent(card.dataset.marketId || ''));
-    });
+    card.addEventListener('click', () => openMarket(decodeURIComponent(card.dataset.marketId || '')));
   });
 }
 
@@ -382,6 +381,23 @@ function buildInsufficientDataHTML(count) {
   `;
 }
 
+function buildRankGrid(poltarRanks) {
+  const rankItem = (label, rank) => `
+    <div class="rank-item">
+      <span>${label}</span>
+      <strong>${rank ? `#${rank}` : '-'}</strong>
+    </div>
+  `;
+  return `
+    <div class="rank-grid">
+      ${rankItem('AS', poltarRanks?.as)}
+      ${rankItem('KOP', poltarRanks?.kop)}
+      ${rankItem('KEPALA', poltarRanks?.kepala)}
+      ${rankItem('EKOR', poltarRanks?.ekor)}
+    </div>
+  `;
+}
+
 function buildEvaluationHTML(evaluation) {
   if (!evaluation) {
     return `
@@ -391,13 +407,6 @@ function buildEvaluationHTML(evaluation) {
       </div>
     `;
   }
-
-  const rankItem = (label, rank) => `
-    <div class="rank-item">
-      <span>${label}</span>
-      <strong>${rank ? `#${rank}` : '-'}</strong>
-    </div>
-  `;
 
   return `
     <div class="eval-card">
@@ -411,12 +420,39 @@ function buildEvaluationHTML(evaluation) {
           <span>AI</span><strong>${escapeHTML(evaluation.aiStatus)}</strong>
         </div>
       </div>
-      <div class="rank-grid">
-        ${rankItem('AS', evaluation.poltarRanks.as)}
-        ${rankItem('KOP', evaluation.poltarRanks.kop)}
-        ${rankItem('KEPALA', evaluation.poltarRanks.kepala)}
-        ${rankItem('EKOR', evaluation.poltarRanks.ekor)}
+      ${buildRankGrid(evaluation.poltarRanks)}
+    </div>
+  `;
+}
+
+function buildEvaluationHistoryHTML(evaluations) {
+  const items = trimEvaluations(evaluations);
+  const disabled = items.length ? '' : 'disabled';
+  const emptyText = items.length ? '' : '<div class="history-empty">Belum ada riwayat evaluasi tersimpan.</div>';
+
+  const rows = items.map((evaluation) => `
+    <div class="history-card">
+      <div class="history-title">TRANSISI RESULT ${escapeHTML(evaluation.fromResult)} → ${escapeHTML(evaluation.newResult)}</div>
+      <div class="eval-grid compact">
+        <div class="eval-pill ${evaluation.bbfsStatus === 'ZONK' ? 'bad' : 'good'}">
+          <span>BBFS</span><strong>${escapeHTML(evaluation.bbfsStatus)}</strong>
+        </div>
+        <div class="eval-pill ${evaluation.aiStatus === 'ZONK' ? 'bad' : 'good'}">
+          <span>AI</span><strong>${escapeHTML(evaluation.aiStatus)}</strong>
+        </div>
       </div>
+      ${buildRankGrid(evaluation.poltarRanks)}
+    </div>
+  `).join('');
+
+  return `
+    <button class="history-toggle" id="evaluationHistoryBtn" onclick="toggleEvaluationHistory()" type="button" ${disabled}>
+      LIHAT RIWAYAT EVALUASI
+    </button>
+    <div class="history-panel" id="evaluationHistoryPanel">
+      <div class="history-panel-title">RIWAYAT EVALUASI TERSIMPAN (${items.length}/14)</div>
+      ${emptyText}
+      ${rows}
     </div>
   `;
 }
@@ -448,6 +484,7 @@ function buildNextPoltarHTML(choices) {
 function buildResultHTML(results, pred, market, historyState) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
   const nextChoices = getNextPoltarChoices(pred, historyState?.history || {});
+  const evaluations = historyState?.history?.evaluations || [];
 
   const chartsHTML = pred.posData.map((pos, pi) => {
     const scoreValues = Object.values(pos.normalized || {});
@@ -525,6 +562,7 @@ function buildResultHTML(results, pred, market, historyState) {
 
     <div class="divider"></div>
     ${buildEvaluationHTML(historyState?.evaluation)}
+    ${buildEvaluationHistoryHTML(evaluations)}
     ${buildNextPoltarHTML(nextChoices)}
   `;
 }
