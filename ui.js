@@ -484,9 +484,6 @@ function buildResultHTML(results, pred, market, historyState) {
   const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
 
   return `
-    ${buildEvaluationHTML(historyState?.evaluation)}
-    ${buildNextPoltarHTML(nextChoices)}
-
     <div class="chart-section">${chartsHTML}</div>
 
     <div class="section-title">POLTAR 4D</div>
@@ -515,6 +512,10 @@ function buildResultHTML(results, pred, market, historyState) {
         <div class="wr-tag">WINRATE: ${aiWR}%</div>
       </div>
     </div>
+
+    <div class="divider"></div>
+    ${buildEvaluationHTML(historyState?.evaluation)}
+    ${buildNextPoltarHTML(nextChoices)}
   `;
 }
 
