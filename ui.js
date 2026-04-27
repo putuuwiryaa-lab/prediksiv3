@@ -11,6 +11,7 @@ const DOT_COLORS = [
 const PREMIUM_APP_URL = 'https://analisaangka.online';
 const HISTORY_PREFIX = 'prediksiv3_eval_';
 const DEFAULT_POLTAR_LIMIT = 7;
+const POLTAR_RANGE_SIZE = 3;
 const MAX_EVALUATION_HISTORY = 14;
 
 let resultPanelOpen = false;
@@ -22,7 +23,7 @@ function escapeHTML(value) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -265,40 +266,67 @@ function processPredictionHistory(market, results, pred) {
   return { evaluation, history };
 }
 
-function getPoltarLimits(evaluations) {
-  const limits = { as: DEFAULT_POLTAR_LIMIT, kop: DEFAULT_POLTAR_LIMIT, kepala: DEFAULT_POLTAR_LIMIT, ekor: DEFAULT_POLTAR_LIMIT };
-  const keys = Object.keys(limits);
+function getDenseRankRange(ranks) {
+  if (!ranks.length) {
+    return { start: 1, end: DEFAULT_POLTAR_LIMIT };
+  }
+
+  if (ranks.length === 1) {
+    const rank = ranks[0].rank;
+    return {
+      start: Math.max(1, rank - 1),
+      end: Math.min(10, rank + 1)
+    };
+  }
+
+  let best = { start: 1, end: POLTAR_RANGE_SIZE, score: -1, distance: Infinity };
+  const maxStart = 10 - POLTAR_RANGE_SIZE + 1;
+
+  for (let start = 1; start <= maxStart; start++) {
+    const end = start + POLTAR_RANGE_SIZE - 1;
+    const center = (start + end) / 2;
+    let score = 0;
+    let distance = 0;
+
+    ranks.forEach((item, index) => {
+      const recencyWeight = 1 / (index + 1);
+      if (item.rank >= start && item.rank <= end) {
+        score += recencyWeight;
+      }
+      distance += Math.abs(item.rank - center) * recencyWeight;
+    });
+
+    if (score > best.score || (score === best.score && distance < best.distance)) {
+      best = { start, end, score, distance };
+    }
+  }
+
+  return { start: best.start, end: best.end };
+}
+
+function getPoltarRankRanges(evaluations) {
+  const ranges = {
+    as: { start: 1, end: DEFAULT_POLTAR_LIMIT },
+    kop: { start: 1, end: DEFAULT_POLTAR_LIMIT },
+    kepala: { start: 1, end: DEFAULT_POLTAR_LIMIT },
+    ekor: { start: 1, end: DEFAULT_POLTAR_LIMIT }
+  };
+
   const recent = trimEvaluations(evaluations);
 
-  keys.forEach(key => {
+  Object.keys(ranges).forEach(key => {
     const ranks = recent
-      .map(e => e?.poltarRanks?.[key])
-      .filter(rank => Number.isFinite(rank) && rank > 0);
+      .map((e, index) => ({ rank: e?.poltarRanks?.[key], index }))
+      .filter(item => Number.isFinite(item.rank) && item.rank > 0 && item.rank <= 10);
 
-    if (!ranks.length) return;
-
-    if (ranks.length === 1) {
-      limits[key] = Math.max(3, Math.min(10, ranks[0]));
-      return;
-    }
-
-    let selected = DEFAULT_POLTAR_LIMIT;
-    for (let k = 3; k <= 10; k++) {
-      const coverage = ranks.filter(rank => rank <= k).length / ranks.length;
-      if (coverage >= 0.70) {
-        selected = k;
-        break;
-      }
-    }
-
-    limits[key] = Math.max(3, Math.min(10, selected));
+    ranges[key] = getDenseRankRange(ranks);
   });
 
-  return limits;
+  return ranges;
 }
 
 function getNextPoltarChoices(pred, history) {
-  const limits = getPoltarLimits(history?.evaluations || []);
+  const ranges = getPoltarRankRanges(history?.evaluations || []);
   const map = [
     ['as', pred.posData[0]], ['kop', pred.posData[1]],
     ['kepala', pred.posData[2]], ['ekor', pred.posData[3]]
@@ -306,7 +334,10 @@ function getNextPoltarChoices(pred, history) {
 
   const choices = {};
   map.forEach(([key, pos]) => {
-    choices[key] = pos.sorted.slice(0, limits[key]).map(item => item.digit);
+    const range = ranges[key];
+    choices[key] = pos.sorted
+      .slice(range.start - 1, range.end)
+      .map(item => item.digit);
   });
 
   return choices;
