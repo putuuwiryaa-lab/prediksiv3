@@ -4,14 +4,14 @@
    ============================================ */
 
 const DOT_COLORS = [
-  '#f0c040','#40c0f0','#f04060','#a040f0',
-  '#40f0a0','#f08040','#40a0f0','#f040c0',
+  '#f0c040','#40c0f0','#f04060','#a040f0', '#40f0a0','#f08040','#40a0f0','#f040c0',
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
 const PREMIUM_APP_URL = 'https://analisaangka.online';
 const HISTORY_PREFIX = 'prediksiv3_eval_';
 const DEFAULT_POLTAR_LIMIT = 7;
+const MAX_EVALUATION_HISTORY = 14;
 
 let resultPanelOpen = false;
 let internalClosing = false;
@@ -107,6 +107,10 @@ function getMarketHistoryKey(marketId) {
   return `${HISTORY_PREFIX}${marketId}`;
 }
 
+function trimEvaluations(evaluations) {
+  return (Array.isArray(evaluations) ? evaluations : []).slice(0, MAX_EVALUATION_HISTORY);
+}
+
 function loadMarketHistory(marketId) {
   try {
     const raw = localStorage.getItem(getMarketHistoryKey(marketId));
@@ -116,7 +120,7 @@ function loadMarketHistory(marketId) {
       lastBaseResult: parsed.lastBaseResult || null,
       lastPrediction: parsed.lastPrediction || null,
       lastEvaluation: parsed.lastEvaluation || null,
-      evaluations: Array.isArray(parsed.evaluations) ? parsed.evaluations : []
+      evaluations: trimEvaluations(parsed.evaluations)
     };
   } catch {
     return { evaluations: [] };
@@ -125,6 +129,7 @@ function loadMarketHistory(marketId) {
 
 function saveMarketHistory(marketId, history) {
   try {
+    history.evaluations = trimEvaluations(history.evaluations);
     localStorage.setItem(getMarketHistoryKey(marketId), JSON.stringify(history));
   } catch {
     // localStorage bisa penuh/private mode. Abaikan agar app tetap jalan.
@@ -213,7 +218,7 @@ function processPredictionHistory(market, results, pred) {
     if (!alreadyEvaluated) {
       evaluation = buildEvaluation(history.lastPrediction, latestResult);
       history.lastEvaluation = evaluation;
-      history.evaluations = [evaluation, ...(history.evaluations || [])].slice(0, 30);
+      history.evaluations = trimEvaluations([evaluation, ...(history.evaluations || [])]);
     }
   }
 
@@ -229,7 +234,7 @@ function processPredictionHistory(market, results, pred) {
 function getPoltarLimits(evaluations) {
   const limits = { as: DEFAULT_POLTAR_LIMIT, kop: DEFAULT_POLTAR_LIMIT, kepala: DEFAULT_POLTAR_LIMIT, ekor: DEFAULT_POLTAR_LIMIT };
   const keys = Object.keys(limits);
-  const recent = (evaluations || []).slice(0, 20);
+  const recent = trimEvaluations(evaluations);
 
   keys.forEach(key => {
     const ranks = recent
@@ -238,7 +243,12 @@ function getPoltarLimits(evaluations) {
 
     if (!ranks.length) return;
 
-    let selected = 7;
+    if (ranks.length === 1) {
+      limits[key] = Math.max(3, Math.min(10, ranks[0]));
+      return;
+    }
+
+    let selected = DEFAULT_POLTAR_LIMIT;
     for (let k = 3; k <= 10; k++) {
       const coverage = ranks.filter(rank => rank <= k).length / ranks.length;
       if (coverage >= 0.70) {
