@@ -8,7 +8,6 @@ const DOT_COLORS = [
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
-const PREMIUM_APP_URL = 'https://analisaangka.online';
 const DEFAULT_POLTAR_LIMIT = 7;
 const POLTAR_RANGE_SIZE = 3;
 const MAX_EVALUATION_HISTORY = 14;
@@ -36,39 +35,6 @@ function getHistoryTokens(raw) {
 
 function toDigitList(value) {
   return Array.isArray(value) ? value.map(v => String(v)) : [];
-}
-
-function setupPremiumBanner() {
-  const app = document.querySelector('.app');
-  const searchWrap = document.querySelector('.search-wrap');
-  if (!app || !searchWrap || document.getElementById('premiumAd')) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'premiumAd';
-  banner.className = 'premium-ad';
-  banner.setAttribute('role', 'button');
-  banner.setAttribute('tabindex', '0');
-  banner.innerHTML = `
-    <div class="premium-ad-top">
-      <div class="premium-ad-badge">PREMIUM</div>
-      <div class="premium-ad-title">ANALISA ANGKA</div>
-    </div>
-    <div class="premium-ad-text">Versi lebih lengkap dari Prediksi 4D: Angka Ikut, Angka Mati, Jumlah, Shio & Rekap.</div>
-    <div class="premium-ad-cta">BUKA APLIKASI PREMIUM →</div>
-  `;
-  banner.addEventListener('click', openPremiumApp);
-  banner.addEventListener('keydown', event => {
-    if (event.key === 'Enter') openPremiumApp();
-  });
-  app.insertBefore(banner, searchWrap);
-}
-
-function openPremiumApp() {
-  if (!PREMIUM_APP_URL || PREMIUM_APP_URL === '#') {
-    alert('Link aplikasi premium belum diatur.');
-    return;
-  }
-  window.open(PREMIUM_APP_URL, '_blank', 'noopener,noreferrer');
 }
 
 function showResultPanel() {
@@ -557,5 +523,4 @@ function buildResultHTML(results, pred, market) {
   `;
 }
 
-setupPremiumBanner();
 fetchMarkets();
