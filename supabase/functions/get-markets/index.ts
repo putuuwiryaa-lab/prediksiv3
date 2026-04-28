@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
         history_data,
         order,
         updated_at,
-        prediction_snapshot,
-        prediction_evaluations
+        prediction_snapshot(*),
+        prediction_evaluations(*)
       `)
       .order("order", { ascending: true });
 
