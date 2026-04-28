@@ -246,15 +246,10 @@ function renderMarkets(markets) {
   list.innerHTML = markets.map((m, i) => {
     const tokens = getHistoryTokens(m.history_data);
     const lastResult = tokens.length ? tokens[tokens.length - 1] : '----';
-    const dataStatus = tokens.length >= 169 ? 'READY' : `${tokens.length}/169`;
     return `
-      <div class="market-card" data-market-id="${safeId(m.id)}" style="animation-delay:${i * 0.03}s">
-        <div class="market-top">
-          <div class="dot" style="background:${DOT_COLORS[i % DOT_COLORS.length]}"></div>
-          <div class="market-name">${escapeHTML(m.name)}</div>
-        </div>
+      <div class="market-card" data-market-id="${safeId(m.id)}" style="animation-delay:${i * 0.026}s">
+        <div class="market-name">${escapeHTML(m.name)}</div>
         <div class="market-result">${escapeHTML(lastResult)}</div>
-        <div class="market-meta">DATA: ${escapeHTML(dataStatus)}</div>
       </div>
     `;
   }).join('');
@@ -394,10 +389,76 @@ function buildHistoryRows(evaluations) {
   `).join('');
 }
 
+function getPerformanceSummary(evaluations) {
+  const items = trimEvaluations(evaluations);
+  const total = items.length;
+  const poltarTotal = total * 4;
+
+  let bbfsHit = 0;
+  let aiHit = 0;
+  let poltarTop5 = 0;
+  let ekorTop5 = 0;
+
+  items.forEach(e => {
+    if (e.bbfsStatus && e.bbfsStatus !== 'ZONK') bbfsHit += 1;
+    if (e.aiStatus === 'MASUK') aiHit += 1;
+
+    ['as', 'kop', 'kepala', 'ekor'].forEach(key => {
+      const rank = e.poltarRanks?.[key];
+      if (Number.isFinite(rank) && rank <= 5) poltarTop5 += 1;
+    });
+
+    const ekorRank = e.poltarRanks?.ekor;
+    if (Number.isFinite(ekorRank) && ekorRank <= 5) ekorTop5 += 1;
+  });
+
+  return { total, poltarTotal, bbfsHit, aiHit, poltarTop5, ekorTop5 };
+}
+
+function buildPerformanceSummaryHTML(evaluations) {
+  const s = getPerformanceSummary(evaluations);
+  const pct = (value, total) => total ? Math.round((value / total) * 100) : 0;
+  const metric = (label, value, total, tone = '') => `
+    <div class="perf-metric ${tone}">
+      <span>${label}</span>
+      <strong>${value}/${total}</strong>
+      <em>${pct(value, total)}%</em>
+    </div>
+  `;
+
+  if (!s.total) {
+    return `
+      <div class="performance-card empty-performance">
+        <div class="performance-title">PERFORMA 14 EVALUASI</div>
+        <div class="performance-note">Belum ada data performa. Ringkasan akan aktif setelah riwayat evaluasi tersedia.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="performance-card">
+      <div class="performance-head">
+        <div>
+          <div class="performance-title">PERFORMA ${s.total} EVALUASI</div>
+          <div class="performance-note">Ringkasan performa dari riwayat tersimpan.</div>
+        </div>
+        <div class="performance-badge">LAST ${s.total}</div>
+      </div>
+      <div class="performance-grid">
+        ${metric('BBFS 2D+', s.bbfsHit, s.total, 'gold')}
+        ${metric('AI MASUK', s.aiHit, s.total, 'cyan')}
+        ${metric('EKOR TOP5', s.ekorTop5, s.total, 'cyan')}
+        ${metric('POLTAR TOP5', s.poltarTop5, s.poltarTotal, 'gold')}
+      </div>
+    </div>
+  `;
+}
+
 function buildHistoryPageContent(evaluations) {
   const items = trimEvaluations(evaluations);
   return `
     <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
+    ${buildPerformanceSummaryHTML(items)}
     <div class="history-panel show page-mode">
       <div class="history-panel-title">RIWAYAT EVALUASI TERSIMPAN (${items.length}/14)</div>
       ${buildHistoryRows(items)}
