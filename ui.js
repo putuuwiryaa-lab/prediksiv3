@@ -4,7 +4,7 @@
    ============================================ */
 
 const DOT_COLORS = [
-  '#f0c040','#40c0f0','#f04060','#a040f0', '#40f0a0','#f08040','#40a0f0','#f040c0',
+  '#f0c040','#40c0f0','#f04060','#f040c0', '#40f0a0','#f08040','#40a0f0','#f040c0',
   '#80f040','#4080f0','#f0a040','#00c8a0'
 ];
 
@@ -141,9 +141,6 @@ window.addEventListener('popstate', () => {
   if (resultPanelOpen) closeResult(true);
 });
 
-// ════════════════════════════════════════════
-// SERVER EVALUATION HELPERS
-// ════════════════════════════════════════════
 function trimEvaluations(evaluations) {
   return (Array.isArray(evaluations) ? evaluations : []).slice(0, MAX_EVALUATION_HISTORY);
 }
@@ -206,9 +203,7 @@ function getDenseRankRange(ranks) {
 
     ranks.forEach((item, index) => {
       const recencyWeight = 1 / (index + 1);
-      if (item.rank >= start && item.rank <= end) {
-        score += recencyWeight;
-      }
+      if (item.rank >= start && item.rank <= end) score += recencyWeight;
       distance += Math.abs(item.rank - center) * recencyWeight;
     });
 
@@ -270,17 +265,12 @@ function getNextPoltarChoices(pred, market) {
   const choices = {};
   Object.keys(lists).forEach(key => {
     const range = ranges[key];
-    choices[key] = lists[key]
-      .slice(range.start - 1, range.end)
-      .map(d => String(d));
+    choices[key] = lists[key].slice(range.start - 1, range.end).map(d => String(d));
   });
 
   return choices;
 }
 
-// ════════════════════════════════════════════
-// RENDER MARKET LIST
-// ════════════════════════════════════════════
 function renderMarkets(markets) {
   const list = document.getElementById('marketList');
   if (!markets.length) {
@@ -396,7 +386,7 @@ function buildEvaluationHTML(evaluation) {
     return `
       <div class="eval-card muted-eval">
         <div class="eval-title">EVALUASI PREDIKSI TERAKHIR</div>
-        <div class="eval-note">Belum ada result baru untuk dievaluasi. Riwayat akan muncul setelah scraper mendeteksi result berubah.</div>
+        <div class="eval-note">Belum ada evaluasi terbaru. Riwayat akan muncul otomatis setelah result berikutnya tersedia.</div>
       </div>
     `;
   }
@@ -441,7 +431,7 @@ function buildHistoryRows(evaluations) {
 function buildHistoryPageContent(evaluations) {
   const items = trimEvaluations(evaluations);
   return `
-    <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir dari Supabase. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
+    <div class="history-page-summary">Menyimpan maksimal ${MAX_EVALUATION_HISTORY} evaluasi terakhir. Riwayat ini membantu memantau pola performa dari transisi result sebelumnya.</div>
     <div class="history-panel show page-mode">
       <div class="history-panel-title">RIWAYAT EVALUASI TERSIMPAN (${items.length}/14)</div>
       ${buildHistoryRows(items)}
