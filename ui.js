@@ -11,6 +11,7 @@ const DOT_COLORS = [
 const DEFAULT_POLTAR_LIMIT = 7;
 const POLTAR_RANGE_SIZE = 3;
 const MAX_EVALUATION_HISTORY = 14;
+const TOP_LINE_POSITION_LIMIT = 6;
 
 let resultPanelOpen = false;
 let historyPageOpen = false;
@@ -223,6 +224,16 @@ function getSnapshotPoltarLists(snapshot, pred) {
   };
 }
 
+function getSnapshotBBFS(snapshot, pred) {
+  const bbfs = toDigitList(snapshot?.bbfs8);
+  return bbfs.length ? bbfs : (pred.bbfs8 || []).map(String);
+}
+
+function getSnapshotAI(snapshot, pred) {
+  const ai = toDigitList(snapshot?.ai4);
+  return ai.length ? ai : (pred.ai4 || []).map(String);
+}
+
 function getNextPoltarChoices(pred, market) {
   const evaluations = getMarketEvaluations(market);
   const ranges = getPoltarRankRanges(evaluations);
@@ -235,6 +246,83 @@ function getNextPoltarChoices(pred, market) {
   });
 
   return choices;
+}
+
+function getTopLineData(pred, market) {
+  const snapshot = getMarketSnapshot(market);
+  const lists = getSnapshotPoltarLists(snapshot, pred);
+  const kepala = (lists.kepala || []).slice(0, TOP_LINE_POSITION_LIMIT).map(String);
+  const ekor = (lists.ekor || []).slice(0, TOP_LINE_POSITION_LIMIT).map(String);
+  const bbfs = new Set(getSnapshotBBFS(snapshot, pred).map(String));
+  const ai = new Set(getSnapshotAI(snapshot, pred).map(String));
+
+  const candidates = [];
+
+  kepala.forEach((k, kIndex) => {
+    ekor.forEach((e, eIndex) => {
+      if (!bbfs.has(k) || !bbfs.has(e)) return;
+
+      const aiScore = (ai.has(k) ? 2 : 0) + (ai.has(e) ? 2 : 0);
+      const rankScore = (TOP_LINE_POSITION_LIMIT - kIndex) + (TOP_LINE_POSITION_LIMIT - eIndex);
+      const line = `${k}${e}`;
+
+      candidates.push({
+        line,
+        score: rankScore + aiScore,
+        kIndex,
+        eIndex,
+        aiScore
+      });
+    });
+  });
+
+  const unique = new Map();
+  candidates.forEach(item => {
+    if (!unique.has(item.line) || unique.get(item.line).score < item.score) {
+      unique.set(item.line, item);
+    }
+  });
+
+  const lines = [...unique.values()]
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.aiScore !== a.aiScore) return b.aiScore - a.aiScore;
+      if (a.kIndex !== b.kIndex) return a.kIndex - b.kIndex;
+      return a.eIndex - b.eIndex;
+    })
+    .map(item => item.line);
+
+  return {
+    lines,
+    text: lines.join('*')
+  };
+}
+
+async function copyTopLine(encodedText, button) {
+  const text = decodeURIComponent(encodedText || '');
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    const input = document.createElement('textarea');
+    input.value = text;
+    input.setAttribute('readonly', 'readonly');
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+  }
+
+  if (button) {
+    const oldText = button.textContent;
+    button.textContent = 'COPIED';
+    setTimeout(() => {
+      button.textContent = oldText || 'COPY';
+    }, 1200);
+  }
 }
 
 function renderMarkets(markets) {
@@ -480,23 +568,18 @@ function buildEvaluationHistoryButton(marketId, evaluations) {
   `;
 }
 
-function buildNextPoltarHTML(choices) {
-  const row = (label, digits) => `
-    <div class="next-row">
-      <div class="next-label">${label}</div>
-      <div class="next-digits">
-        ${digits.map(d => `<div class="next-digit">${escapeHTML(d)}</div>`).join('')}
-      </div>
-    </div>
-  `;
+function buildTopLineHTML(topLine) {
+  const safeText = escapeHTML(topLine.text || '');
+  const encodedText = encodeURIComponent(topLine.text || '');
 
   return `
-    <div class="section-title">PILIHAN POLTAR SELANJUTNYA</div>
-    <div class="next-poltar-card">
-      ${row('AS', choices.as)}
-      ${row('KOP', choices.kop)}
-      ${row('KEPALA', choices.kepala)}
-      ${row('EKOR', choices.ekor)}
+    <div class="section-title">TOP LINE</div>
+    <div class="next-poltar-card top-line-card">
+      <div class="top-line-output">${safeText || '-'}</div>
+      <div class="top-line-footer">
+        <div class="top-line-count">${topLine.lines.length} LINE TERPILIH</div>
+        <button class="top-line-copy" onclick="copyTopLine('${encodedText}', this)" type="button" ${topLine.text ? '' : 'disabled'}>COPY</button>
+      </div>
     </div>
   `;
 }
@@ -505,7 +588,7 @@ function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
   const evaluations = getMarketEvaluations(market);
   const evaluation = getLatestEvaluation(market);
-  const nextChoices = getNextPoltarChoices(pred, market);
+  const topLine = getTopLineData(pred, market);
 
   const chartsHTML = pred.posData.map((pos, pi) => {
     const scoreValues = Object.values(pos.normalized || {});
@@ -582,7 +665,7 @@ function buildResultHTML(results, pred, market) {
     </div>
 
     <div class="divider"></div>
-    ${buildNextPoltarHTML(nextChoices)}
+    ${buildTopLineHTML(topLine)}
     ${buildEvaluationHTML(evaluation)}
     ${buildEvaluationHistoryButton(market.id, evaluations)}
   `;
