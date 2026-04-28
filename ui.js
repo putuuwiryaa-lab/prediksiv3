@@ -11,7 +11,7 @@ const DOT_COLORS = [
 const DEFAULT_POLTAR_LIMIT = 7;
 const POLTAR_RANGE_SIZE = 3;
 const MAX_EVALUATION_HISTORY = 14;
-const TOP_LINE_POSITION_LIMIT = 6;
+const TOP_LINE_POSITION_LIMIT = 5;
 
 let resultPanelOpen = false;
 let historyPageOpen = false;
