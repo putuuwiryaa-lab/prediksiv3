@@ -1,17 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0b0f19"/>
-      <stop offset="100%" stop-color="#1e293b"/>
+      <stop offset="0%" stop-color="#050812"/>
+      <stop offset="100%" stop-color="#142033"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0ea5e9"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
+    <linearGradient id="n" x1="102" y1="105" x2="410" y2="406" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="44%" stop-color="#e5e7eb"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
     </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="166" fill="none" stroke="#2a3b59" stroke-width="22"/>
-  <circle cx="256" cy="256" r="136" fill="rgba(14,165,233,0.08)"/>
-  <text x="256" y="221" text-anchor="middle" font-family="Arial, sans-serif" font-size="92" font-weight="800" fill="#f8fafc">4D</text>
-  <text x="256" y="316" text-anchor="middle" font-family="Arial, sans-serif" font-size="74" font-weight="800" fill="url(#accent)">PRO</text>
+  <g opacity="0.34" stroke="#0ea5e9" stroke-width="3">
+    <path d="M96 144H416M96 208H416M96 272H416M96 336H416"/>
+    <path d="M144 96V416M208 96V416M272 96V416M336 96V416"/>
+  </g>
+  <g fill="#0ea5e9" opacity="0.9">
+    <circle cx="144" cy="144" r="7"/><circle cx="272" cy="208" r="7"/><circle cx="336" cy="336" r="7"/><circle cx="208" cy="400" r="7"/>
+  </g>
+  <g fill="url(#gold)">
+    <circle cx="400" cy="144" r="8"/><circle cx="400" cy="336" r="8"/>
+  </g>
+  <path d="M134 382V130H192L320 293V130H378V382H322L192 217V382Z" fill="url(#n)" filter="url(#glow)"/>
+  <path d="M134 382V130H192L320 293V130H378" fill="none" stroke="#f8fafc" stroke-width="10" stroke-linejoin="round" opacity="0.72"/>
+  <path d="M114 396C197 445 317 445 397 388" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
 </svg>
