@@ -4,35 +4,34 @@
       <stop offset="0%" stop-color="#050812"/>
       <stop offset="100%" stop-color="#142033"/>
     </linearGradient>
-    <linearGradient id="n" x1="102" y1="105" x2="410" y2="406" gradientUnits="userSpaceOnUse">
+    <linearGradient id="a" x1="112" y1="102" x2="400" y2="410" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="44%" stop-color="#e5e7eb"/>
+      <stop offset="48%" stop-color="#e5e7eb"/>
       <stop offset="100%" stop-color="#0ea5e9"/>
     </linearGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#facc15"/>
       <stop offset="100%" stop-color="#f59e0b"/>
     </linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="11" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <g opacity="0.34" stroke="#0ea5e9" stroke-width="3">
-    <path d="M96 144H416M96 208H416M96 272H416M96 336H416"/>
-    <path d="M144 96V416M208 96V416M272 96V416M336 96V416"/>
+  <g opacity="0.32" stroke="#0ea5e9" stroke-width="3">
+    <path d="M96 150H416M96 220H416M96 290H416M96 360H416"/>
+    <path d="M150 96V416M220 96V416M290 96V416M360 96V416"/>
   </g>
-  <g fill="#0ea5e9" opacity="0.9">
-    <circle cx="144" cy="144" r="7"/><circle cx="272" cy="208" r="7"/><circle cx="336" cy="336" r="7"/><circle cx="208" cy="400" r="7"/>
+  <g opacity="0.9">
+    <circle cx="150" cy="150" r="7" fill="#0ea5e9"/>
+    <circle cx="290" cy="220" r="7" fill="#0ea5e9"/>
+    <circle cx="360" cy="360" r="7" fill="#0ea5e9"/>
+    <circle cx="400" cy="150" r="8" fill="url(#gold)"/>
+    <circle cx="112" cy="360" r="8" fill="url(#gold)"/>
   </g>
-  <g fill="url(#gold)">
-    <circle cx="400" cy="144" r="8"/><circle cx="400" cy="336" r="8"/>
-  </g>
-  <path d="M134 382V130H192L320 293V130H378V382H322L192 217V382Z" fill="url(#n)" filter="url(#glow)"/>
-  <path d="M134 382V130H192L320 293V130H378" fill="none" stroke="#f8fafc" stroke-width="10" stroke-linejoin="round" opacity="0.72"/>
-  <path d="M114 396C197 445 317 445 397 388" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+  <path d="M128 382L230 122H286L388 382H318L302 334H214L198 382H128ZM232 276H282L256 196Z" fill="url(#a)" filter="url(#glow)"/>
+  <path d="M128 382L230 122H286L388 382" fill="none" stroke="#f8fafc" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity="0.72"/>
+  <path d="M186 400C240 428 309 428 362 394" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <text x="256" y="474" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="#facc15" letter-spacing="4">PRO</text>
 </svg>
