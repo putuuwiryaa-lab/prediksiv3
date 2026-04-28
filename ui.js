@@ -402,7 +402,7 @@ async function openMarket(id) {
     return;
   }
 
-  const prediksi = runEnsemble(results);
+  const prediksi = createDisplayPrediction(market, results);
 
   document.getElementById('resultTitle').textContent = market.name;
   document.getElementById('resultBody').innerHTML = buildResultHTML(results, prediksi, market);
