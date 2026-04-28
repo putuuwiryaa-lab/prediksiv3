@@ -146,6 +146,20 @@ function getMarketSnapshot(market) {
   return market?.prediction_snapshot || null;
 }
 
+function getEvaluationWinrates(evaluations) {
+  const items = trimEvaluations(evaluations);
+  const total = items.length;
+  const bbfsHit = items.filter(e => e.bbfsStatus && e.bbfsStatus !== 'ZONK').length;
+  const aiHit = items.filter(e => e.aiStatus === 'MASUK').length;
+  const pct = value => total ? ((value / total) * 100).toFixed(1) : null;
+
+  return {
+    total,
+    bbfsText: total ? `${pct(bbfsHit)}%` : 'BELUM ADA RIWAYAT',
+    aiText: total ? `${pct(aiHit)}%` : 'BELUM ADA RIWAYAT'
+  };
+}
+
 function getDenseRankRange(ranks) {
   if (!ranks.length) {
     return { start: 1, end: DEFAULT_POLTAR_LIMIT };
@@ -588,6 +602,7 @@ function buildResultHTML(results, pred, market) {
   const posColors = ['var(--accent)', 'var(--accent2)', 'var(--accent4)', 'var(--accent3)'];
   const evaluations = getMarketEvaluations(market);
   const evaluation = getLatestEvaluation(market);
+  const evaluationWinrate = getEvaluationWinrates(evaluations);
   const topLine = getTopLineData(pred, market);
 
   const chartsHTML = pred.posData.map((pos, pi) => {
@@ -631,9 +646,6 @@ function buildResultHTML(results, pred, market) {
       </div>`;
   }).join('');
 
-  const bbfsWR = ((pred.winBBFS / pred.totalTransisi) * 100).toFixed(1);
-  const aiWR = ((pred.winAI / pred.totalTransisi) * 100).toFixed(1);
-
   return `
     <div class="chart-section">${chartsHTML}</div>
 
@@ -645,14 +657,14 @@ function buildResultHTML(results, pred, market) {
 
     <div class="divider"></div>
 
-    <div class="section-title bonus-title">BONUS OUTPUT</div>
+    <div class="section-title bonus-title">PILIHAN INVEST</div>
     <div class="summary-section bonus-section">
       <div>
         <div class="row-label">BBFS 8 DIGIT</div>
         <div class="digit-scroll">
           ${pred.bbfs8.map(d => `<div class="digit-box bonus-box">${d}</div>`).join('')}
         </div>
-        <div class="wr-tag">WINRATE: ${bbfsWR}%</div>
+        <div class="wr-tag">WINRATE: ${evaluationWinrate.bbfsText}</div>
       </div>
 
       <div>
@@ -660,7 +672,7 @@ function buildResultHTML(results, pred, market) {
         <div class="digit-scroll">
           ${pred.ai4.map(d => `<div class="digit-box bonus-box">${d}</div>`).join('')}
         </div>
-        <div class="wr-tag">WINRATE: ${aiWR}%</div>
+        <div class="wr-tag">WINRATE: ${evaluationWinrate.aiText}</div>
       </div>
     </div>
 
