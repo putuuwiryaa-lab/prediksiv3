@@ -184,6 +184,38 @@ body {
 .spinner { width: 40px; height: 40px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s infinite linear; }
 .loading-text { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
 .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); font-size: 12px; display: flex; flex-direction: column; align-items: center; }
+@media (min-width: 768px) {
+  body {
+    background:
+      radial-gradient(circle at top center, rgba(14,165,233,0.16), transparent 26%),
+      radial-gradient(circle at bottom center, rgba(240,192,64,0.08), transparent 34%),
+      var(--bg);
+  }
+
+  .app {
+    width: 430px;
+    min-height: 100vh;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 0 70px rgba(14,165,233,0.13), 0 0 140px rgba(0,0,0,0.35);
+  }
+
+  .result-panel,
+  .history-page {
+    width: 430px;
+    max-width: 430px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    box-shadow: 0 0 70px rgba(14,165,233,0.13), 0 0 140px rgba(0,0,0,0.35);
+    border-left: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .history-page-body {
+    max-width: 430px;
+  }
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes marketFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
