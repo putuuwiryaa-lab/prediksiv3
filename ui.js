@@ -246,10 +246,15 @@ function renderMarkets(markets) {
   list.innerHTML = markets.map((m, i) => {
     const tokens = getHistoryTokens(m.history_data);
     const lastResult = tokens.length ? tokens[tokens.length - 1] : '----';
+    const dataStatus = tokens.length >= 169 ? 'READY' : `${tokens.length}/169`;
     return `
       <div class="market-card" data-market-id="${safeId(m.id)}" style="animation-delay:${i * 0.026}s">
-        <div class="market-name">${escapeHTML(m.name)}</div>
+        <div class="market-top">
+          <div class="dot" style="background:${DOT_COLORS[i % DOT_COLORS.length]}"></div>
+          <div class="market-name">${escapeHTML(m.name)}</div>
+        </div>
         <div class="market-result">${escapeHTML(lastResult)}</div>
+        <div class="market-meta">DATA: ${escapeHTML(dataStatus)}</div>
       </div>
     `;
   }).join('');
