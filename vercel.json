@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "prediksiv3.vercel.app"
+        }
+      ],
+      "destination": "https://angka.pro/$1",
+      "permanent": true
+    }
+  ]
+}
