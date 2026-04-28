@@ -389,30 +389,29 @@ function buildHistoryRows(evaluations) {
   `).join('');
 }
 
+function isTop5(rank) {
+  return Number.isFinite(rank) && rank > 0 && rank <= 5;
+}
+
 function getPerformanceSummary(evaluations) {
   const items = trimEvaluations(evaluations);
   const total = items.length;
-  const poltarTotal = total * 4;
 
   let bbfsHit = 0;
   let aiHit = 0;
-  let poltarTop5 = 0;
-  let ekorTop5 = 0;
+  let poltar2dTop5 = 0;
+  let poltar4dTop5 = 0;
 
   items.forEach(e => {
     if (e.bbfsStatus && e.bbfsStatus !== 'ZONK') bbfsHit += 1;
     if (e.aiStatus === 'MASUK') aiHit += 1;
 
-    ['as', 'kop', 'kepala', 'ekor'].forEach(key => {
-      const rank = e.poltarRanks?.[key];
-      if (Number.isFinite(rank) && rank <= 5) poltarTop5 += 1;
-    });
-
-    const ekorRank = e.poltarRanks?.ekor;
-    if (Number.isFinite(ekorRank) && ekorRank <= 5) ekorTop5 += 1;
+    const ranks = e.poltarRanks || {};
+    if (isTop5(ranks.kepala) && isTop5(ranks.ekor)) poltar2dTop5 += 1;
+    if (isTop5(ranks.as) && isTop5(ranks.kop) && isTop5(ranks.kepala) && isTop5(ranks.ekor)) poltar4dTop5 += 1;
   });
 
-  return { total, poltarTotal, bbfsHit, aiHit, poltarTop5, ekorTop5 };
+  return { total, bbfsHit, aiHit, poltar2dTop5, poltar4dTop5 };
 }
 
 function buildPerformanceSummaryHTML(evaluations) {
@@ -447,8 +446,8 @@ function buildPerformanceSummaryHTML(evaluations) {
       <div class="performance-grid">
         ${metric('BBFS 2D+', s.bbfsHit, s.total, 'gold')}
         ${metric('AI MASUK', s.aiHit, s.total, 'cyan')}
-        ${metric('EKOR TOP5', s.ekorTop5, s.total, 'cyan')}
-        ${metric('POLTAR TOP5', s.poltarTop5, s.poltarTotal, 'gold')}
+        ${metric('POLTAR 2D TOP5', s.poltar2dTop5, s.total, 'cyan')}
+        ${metric('POLTAR 4D TOP5', s.poltar4dTop5, s.total, 'gold')}
       </div>
     </div>
   `;
