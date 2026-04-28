@@ -8,7 +8,7 @@
           "value": "prediksiv3.vercel.app"
         }
       ],
-      "destination": "https://angka.pro/$1",
+      "destination": "https://www.angka.pro/$1",
       "permanent": true
     }
   ]
