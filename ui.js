@@ -22,7 +22,7 @@ function escapeHTML(value) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -386,7 +386,7 @@ async function refreshMarkets() {
 }
 
 async function openMarket(id) {
-  const market = allMarkets.find(m => m.id === id);
+  const market = allMarkets.find(m => String(m.id) === String(id));
   if (!market) return;
 
   showLoading(`ANALISA ${market.name}...`);
