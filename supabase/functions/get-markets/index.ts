@@ -27,14 +27,25 @@ Deno.serve(async (req) => {
 
     const SUPABASE_KEY =
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
-      Deno.env.get("SUPABASE_ANON_KEY") ||
-      "KEY";
+      Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!SUPABASE_KEY) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY");
+    }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const { data, error } = await supabase
       .from("markets")
-      .select("id,name,history_data,order,updated_at")
+      .select(`
+        id,
+        name,
+        history_data,
+        order,
+        updated_at,
+        prediction_snapshot,
+        prediction_evaluations
+      `)
       .order("order", { ascending: true });
 
     if (error) throw error;
