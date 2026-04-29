@@ -11,20 +11,31 @@
     return title.trim() || 'PASARAN';
   }
 
+  function getCurrentPredictionData() {
+    return window.__currentPredictionShareData || { ai4: [], bbfs8: [] };
+  }
+
   window.shareTopLine = function shareTopLine(encodedText, button) {
     const lineText = decodeURIComponent(encodedText || '');
     if (!lineText) return;
 
     const marketName = getCurrentMarketName();
+    const data = getCurrentPredictionData();
+    const aiText = Array.isArray(data.ai4) ? data.ai4.join('') : '';
+    const bbfsText = Array.isArray(data.bbfs8) ? data.bbfs8.join('') : '';
+
     const message = [
-      'ANGKA PRO',
-      `Pasaran: ${marketName}`,
+      '  ANGKA.PRO',
+      '  -------------',
+      `  ${marketName}`,
       '',
-      'TOP LINE:',
+      `AI : ${aiText}`,
+      `BBFS : ${bbfsText}`,
+      'TOP LINE :',
       lineText
     ].join('\n');
 
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const url = 'https://wa.me/' + '?text=' + encodeURIComponent(message);
     window.open(url, '_blank', 'noopener,noreferrer');
 
     if (button) {
@@ -39,6 +50,10 @@
   if (typeof window.getTopLineData === 'function') {
     const originalGetTopLineData = window.getTopLineData;
     window.getTopLineData = function patchedGetTopLineData(pred, market) {
+      window.__currentPredictionShareData = {
+        ai4: Array.isArray(pred?.ai4) ? pred.ai4.map(String) : [],
+        bbfs8: Array.isArray(pred?.bbfs8) ? pred.bbfs8.map(String) : []
+      };
       const data = originalGetTopLineData(pred, market) || { lines: [], text: '' };
       const lines = sortTopLine(data.lines);
       return {
@@ -65,9 +80,9 @@
           <div class="top-line-count">${lines.length} LINE TERPILIH</div>
           <div class="top-line-actions">
             <button class="top-line-copy" onclick="copyTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>COPY</button>
-            <button class="top-line-share" onclick="shareTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>BAGIKAN</button>
           </div>
         </div>
+        <button class="top-line-share top-line-share-wide" onclick="shareTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>BAGIKAN KE WHATSAPP</button>
       </div>
     `;
   };
@@ -122,6 +137,13 @@
       font-weight: 900;
       letter-spacing: 1px;
       cursor: pointer;
+    }
+    .top-line-share-wide {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(240,192,64,0.22), rgba(255,138,0,0.12));
+      box-shadow: 0 0 22px rgba(240,192,64,0.10);
     }
     .top-line-share:disabled {
       opacity: 0.45;
