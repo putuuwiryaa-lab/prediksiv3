@@ -1,11 +1,14 @@
-const CACHE_NAME = 'prediksi4d-pro-v3';
+const CACHE_NAME = 'prediksi4d-pro-secure-1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/style.css?v=3',
-  '/engine.js?v=2',
-  '/ui.js?v=3',
-  '/topline-patch.js?v=1',
+  '/style.css?v=secure-1',
+  '/premium-banner.css?v=1',
+  '/support.css?v=1',
+  '/engine.js?v=secure-1',
+  '/ui.js?v=secure-1',
+  '/topline-patch.js?v=secure-1',
+  '/support.js?v=1',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg'
