@@ -25,15 +25,15 @@
     const bbfsText = Array.isArray(data.bbfs8) ? data.bbfs8.join('') : '';
 
     const message = [
-      '  ANGKA.PRO',
-      '  -------------',
-      `  ${marketName}`,
-      '',
-      `AI : ${aiText}`,
-      `BBFS : ${bbfsText}`,
-      'TOP LINE :',
-      lineText
-    ].join('\n');
+  ' ✦✦ *ANGKA PRO* ✦✦',
+  '━━━━━━━━━━━━━━',
+  `${marketName}`,
+  '',
+  `AI : ${aiText}`,
+  `BBFS : ${bbfsText}`,
+  'TOP LINE :',
+  lineText
+].join('\n');
 
     const url = 'https://wa.me/' + '?text=' + encodeURIComponent(message);
     window.open(url, '_blank', 'noopener,noreferrer');
