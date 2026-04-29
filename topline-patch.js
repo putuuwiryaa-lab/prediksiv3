@@ -1,10 +1,40 @@
-/* TOP LINE compact chip display + numeric ascending copy order */
+/* TOP LINE compact chip display + numeric ascending copy order + WhatsApp share */
 (function () {
   function sortTopLine(lines) {
     return [...(lines || [])]
       .map(line => String(line).padStart(2, '0'))
       .sort((a, b) => Number(a) - Number(b));
   }
+
+  function getCurrentMarketName() {
+    const title = document.getElementById('resultTitle')?.textContent || '';
+    return title.trim() || 'PASARAN';
+  }
+
+  window.shareTopLine = function shareTopLine(encodedText, button) {
+    const lineText = decodeURIComponent(encodedText || '');
+    if (!lineText) return;
+
+    const marketName = getCurrentMarketName();
+    const message = [
+      'ANGKA PRO',
+      `Pasaran: ${marketName}`,
+      '',
+      'TOP LINE:',
+      lineText
+    ].join('\n');
+
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    if (button) {
+      const oldText = button.textContent;
+      button.textContent = 'OPEN WA';
+      setTimeout(() => {
+        button.textContent = oldText || 'BAGIKAN';
+      }, 1200);
+    }
+  };
 
   if (typeof window.getTopLineData === 'function') {
     const originalGetTopLineData = window.getTopLineData;
@@ -33,7 +63,10 @@
         <div class="top-line-chip-wrap">${chips}</div>
         <div class="top-line-footer">
           <div class="top-line-count">${lines.length} LINE TERPILIH</div>
-          <button class="top-line-copy" onclick="copyTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>COPY</button>
+          <div class="top-line-actions">
+            <button class="top-line-copy" onclick="copyTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>COPY</button>
+            <button class="top-line-share" onclick="shareTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>BAGIKAN</button>
+          </div>
         </div>
       </div>
     `;
@@ -71,6 +104,31 @@
       color: var(--muted);
       font-size: 12px;
       font-weight: 900;
+    }
+    .top-line-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .top-line-share {
+      border: 1px solid rgba(240,192,64,0.38);
+      background: rgba(240,192,64,0.14);
+      color: var(--gold);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+    .top-line-share:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .top-line-share:active:not(:disabled) {
+      transform: scale(0.96);
     }
   `;
   document.head.appendChild(style);
