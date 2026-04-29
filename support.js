@@ -3,8 +3,8 @@ const SUPPORT_WA_NUMBER = '6285792030642';
 function supportWhatsappUrl(type) {
   const isBug = type === 'bug';
   const text = isBug
-    ? `Halo Admin ANGKA PRO, saya ingin melaporkan bug/error.\n\nPasaran:\nMasalah:\nScreenshot:\nDevice:`
-    : `Halo Admin ANGKA PRO, saya ingin memberi kritik/saran.\n\nSaran:\nBagian aplikasi:`;
+    ? 'Halo Admin ANGKA PRO, saya ingin melaporkan bug/error.'
+    : 'Halo Admin ANGKA PRO, saya ingin memberi kritik/saran.';
   return `https://wa.me/${SUPPORT_WA_NUMBER}?text=${encodeURIComponent(text)}`;
 }
 
@@ -30,26 +30,26 @@ function setupSupportCenter() {
   fab.id = 'supportFab';
   fab.className = 'support-fab';
   fab.type = 'button';
-  fab.setAttribute('aria-label', 'Support Center');
-  fab.innerHTML = '<span class="support-fab-icon">✦</span><span>SUPPORT</span>';
+  fab.setAttribute('aria-label', 'Pusat Bantuan');
+  fab.innerHTML = '<span class="support-fab-icon">?</span><span>BANTUAN</span>';
   fab.addEventListener('click', openSupportCenter);
 
   const overlay = document.createElement('div');
   overlay.id = 'supportOverlay';
   overlay.className = 'support-overlay';
   overlay.innerHTML = `
-    <div class="support-sheet" role="dialog" aria-modal="true" aria-label="Support Center">
+    <div class="support-sheet" role="dialog" aria-modal="true" aria-label="Pusat Bantuan">
       <div class="support-sheet-head">
         <div>
-          <div class="support-sheet-title">SUPPORT CENTER</div>
+          <div class="support-sheet-title">PUSAT BANTUAN</div>
           <div class="support-sheet-subtitle">Laporkan kendala atau kirim masukan untuk pengembangan ANGKA PRO.</div>
         </div>
         <button class="support-close" type="button" aria-label="Tutup">×</button>
       </div>
       <button class="support-option" type="button" data-support-type="bug">
-        <span class="support-option-icon">⚠</span>
+        <span class="support-option-icon">!</span>
         <span>
-          <span class="support-option-title">BUG / ERROR</span>
+          <span class="support-option-title">LAPOR BUG / ERROR</span>
           <span class="support-option-desc">Laporkan kendala aplikasi, data, atau tampilan.</span>
         </span>
       </button>
