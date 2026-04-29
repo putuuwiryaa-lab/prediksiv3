@@ -1,5 +1,8 @@
-/* TOP LINE compact chip display + numeric ascending copy order + WhatsApp share */
+/* TOP LINE compact chip display + numeric ascending copy order + private channel share */
 (function () {
+  const CHANNEL_URL = 'https://whatsapp.com/channel/0029VbBtsp2J93wOeJ44uV23';
+  const ADMIN_KEY = '085792030642';
+
   function sortTopLine(lines) {
     return [...(lines || [])]
       .map(line => String(line).padStart(2, '0'))
@@ -15,35 +18,64 @@
     return window.__currentPredictionShareData || { ai4: [], bbfs8: [] };
   }
 
-  window.shareTopLine = function shareTopLine(encodedText, button) {
-    const lineText = decodeURIComponent(encodedText || '');
-    if (!lineText) return;
+  function isChannelAdmin() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('channel_admin') === ADMIN_KEY) {
+      localStorage.setItem('angkaProChannelAdmin', '1');
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      return true;
+    }
+    return localStorage.getItem('angkaProChannelAdmin') === '1';
+  }
 
+  function buildChannelMessage(lineText) {
     const marketName = getCurrentMarketName();
     const data = getCurrentPredictionData();
     const aiText = Array.isArray(data.ai4) ? data.ai4.join('') : '';
     const bbfsText = Array.isArray(data.bbfs8) ? data.bbfs8.join('') : '';
 
-    const message = [
-  ' ✦✦ *ANGKA PRO* ✦✦',
-  '━━━━━━━━━━━━━━',
-  `${marketName}`,
-  '',
-  `AI : ${aiText}`,
-  `BBFS : ${bbfsText}`,
-  'TOP LINE :',
-  lineText
-].join('\n');
+    return [
+      ' ✦✦ *ANGKA PRO* ✦✦',
+      '━━━━━━━━━━━━━━',
+      `${marketName}`,
+      '',
+      `AI : ${aiText}`,
+      `BBFS : ${bbfsText}`,
+      'TOP LINE :',
+      lineText
+    ].join('\n');
+  }
 
-    const url = 'https://wa.me/' + '?text=' + encodeURIComponent(message);
-    window.open(url, '_blank', 'noopener,noreferrer');
+  async function copyTextToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      const input = document.createElement('textarea');
+      input.value = text;
+      input.setAttribute('readonly', 'readonly');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+  }
+
+  window.openChannelShare = async function openChannelShare(encodedText, button) {
+    const lineText = decodeURIComponent(encodedText || '');
+    if (!lineText) return;
+
+    const message = buildChannelMessage(lineText);
+    await copyTextToClipboard(message);
+    window.open(CHANNEL_URL, '_blank', 'noopener,noreferrer');
 
     if (button) {
       const oldText = button.textContent;
-      button.textContent = 'OPEN WA';
+      button.textContent = 'TERSALIN - BUKA SALURAN';
       setTimeout(() => {
-        button.textContent = oldText || 'BAGIKAN';
-      }, 1200);
+        button.textContent = oldText || 'SALIN & BUKA SALURAN';
+      }, 1600);
     }
   };
 
@@ -71,6 +103,9 @@
     const chips = lines.length
       ? lines.map(line => `<span class="top-line-chip">${escapeHTML(line)}</span>`).join('')
       : '<span class="top-line-empty">-</span>';
+    const channelButton = isChannelAdmin()
+      ? `<button class="top-line-share top-line-share-wide" onclick="openChannelShare('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>SALIN & BUKA SALURAN</button>`
+      : '';
 
     return `
       <div class="section-title">TOP LINE</div>
@@ -82,7 +117,7 @@
             <button class="top-line-copy" onclick="copyTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>COPY</button>
           </div>
         </div>
-        <button class="top-line-share top-line-share-wide" onclick="shareTopLine('${encodedText}', this)" type="button" ${copyText ? '' : 'disabled'}>BAGIKAN KE WHATSAPP</button>
+        ${channelButton}
       </div>
     `;
   };
