@@ -39,12 +39,17 @@ function toggleFavoriteMarket(marketId) {
 
 function sortFavoriteMarkets(markets) {
   const favorites = new Set(getFavoriteMarketIds());
-  return [...markets].sort((a, b) => {
-    const aFav = favorites.has(String(a.id));
-    const bFav = favorites.has(String(b.id));
-    if (aFav !== bFav) return aFav ? -1 : 1;
-    return String(a.name || '').localeCompare(String(b.name || ''), 'id');
+  const favoriteMarkets = [];
+  const regularMarkets = [];
+
+  markets.forEach(market => {
+    if (favorites.has(String(market.id))) favoriteMarkets.push(market);
+    else regularMarkets.push(market);
   });
+
+  // Penting: jangan sort berdasarkan nama/order di sini.
+  // Urutan asli dari scraper harus tetap dipertahankan.
+  return [...favoriteMarkets, ...regularMarkets];
 }
 
 function buildFavoriteButton(market) {
