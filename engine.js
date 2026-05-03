@@ -4,7 +4,7 @@
    Prediction logic is not shipped to the browser.
    ============================================ */
 
-const MARKETS_API_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co/functions/v1/get-markets';
+const MARKETS_API_URL = 'https://ldeofmwxttdjcvylhabu.supabase.co/functions/v1/get-public-markets';
 let allMarkets = [];
 
 // ════════════════════════════════════════════
@@ -75,6 +75,21 @@ function completeDigitList(values) {
   return digits.slice(0, 10);
 }
 
+function normalizePublicSnapshot(market) {
+  const rawSnapshot = Array.isArray(market?.prediction_snapshot)
+    ? (market.prediction_snapshot[0] || {})
+    : (market?.prediction_snapshot || {});
+
+  return {
+    ai4: rawSnapshot.ai4 || market?.ai4 || [],
+    bbfs8: rawSnapshot.bbfs8 || market?.bbfs8 || [],
+    poltar_as: rawSnapshot.poltar_as || market?.poltar_as || [],
+    poltar_kop: rawSnapshot.poltar_kop || market?.poltar_kop || [],
+    poltar_kepala: rawSnapshot.poltar_kepala || market?.poltar_kepala || [],
+    poltar_ekor: rawSnapshot.poltar_ekor || market?.poltar_ekor || []
+  };
+}
+
 function buildDisplayPosition(label, values) {
   const digits = completeDigitList(values);
   const normalized = {};
@@ -87,7 +102,7 @@ function buildDisplayPosition(label, values) {
 }
 
 function createDisplayPrediction(market, results) {
-  const snapshot = market?.prediction_snapshot || {};
+  const snapshot = normalizePublicSnapshot(market);
 
   const poltarAs = snapshotDigits(snapshot.poltar_as);
   const poltarKop = snapshotDigits(snapshot.poltar_kop);
@@ -111,14 +126,16 @@ function createDisplayPrediction(market, results) {
     .slice(0, 4)
     .sort((a, b) => Number(a) - Number(b));
 
+  const dataCount = Number(market?.data_count) || (results || []).length;
+
   return {
     posData,
     bbfs8,
     ai4,
     winBBFS: 0,
     winAI: 0,
-    totalTransisi: Math.max(0, (results || []).length - 1),
-    dataCount: (results || []).length,
+    totalTransisi: Math.max(0, dataCount - 1),
+    dataCount,
     snapshotOnly: true
   };
 }
