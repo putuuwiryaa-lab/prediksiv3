@@ -97,3 +97,5 @@ async function openMarket(id) {
   hideLoading();
   showResultPanel();
 }
+
+fetchMarkets();
