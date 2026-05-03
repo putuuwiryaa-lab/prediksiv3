@@ -111,16 +111,15 @@
 
   </div>
 
-  <script src="engine.js?v=secure-2"></script>
+  <script src="engine.js?v=restore-1"></script>
   <script src="ui.js?v=secure-1"></script>
-  <script src="public-data-patch.js?v=secure-1"></script>
   <script src="favorite-markets.js?v=1"></script>
   <script src="topline-patch.js?v=secure-1"></script>
   <script src="support.js?v=1"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js?v=secure-1').catch(() => {});
+        navigator.serviceWorker.register('/sw.js?v=restore-1').catch(() => {});
       });
     }
   </script>
