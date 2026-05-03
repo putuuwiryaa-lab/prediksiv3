@@ -346,9 +346,8 @@ function renderMarkets(markets) {
     return;
   }
   list.innerHTML = markets.map((m, i) => {
-    const tokens = getHistoryTokens(m.history_data);
-    const lastResult = tokens.length ? tokens[tokens.length - 1] : '----';
-    const dataStatus = tokens.length >= 169 ? 'READY' : `${tokens.length}/169`;
+    const lastResult = m.last_result || '----';
+const dataStatus = m.data_count >= 169 ? 'READY' : `${m.data_count}/169`;
     return `
       <div class="market-card" data-market-id="${safeId(m.id)}" style="animation-delay:${i * 0.026}s">
         <div class="market-top">
