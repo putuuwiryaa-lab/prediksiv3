@@ -1,6 +1,7 @@
 // api/admin-auth.js
-// Vercel Serverless Function — cek password admin
-// Set ADMIN_PASSWORD di Vercel Dashboard → Settings → Environment Variables
+// Set di Vercel Environment Variables:
+//   ADMIN_PASSWORD  = password admin kamu
+//   SUPABASE_ANON_KEY = anon key Supabase kamu
 
 module.exports = function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,13 +15,16 @@ module.exports = function handler(req, res) {
   }
 
   const correctPassword = process.env.ADMIN_PASSWORD;
+  const anonKey = process.env.SUPABASE_ANON_KEY;
 
   if (!correctPassword) {
     return res.status(500).json({ error: 'Server belum dikonfigurasi.' });
   }
 
   if (password === correctPassword) {
-    return res.status(200).json({ ok: true });
+    // Return anon key hanya setelah login berhasil
+    // Tidak perlu disimpan di kode frontend sama sekali
+    return res.status(200).json({ ok: true, key: anonKey || '' });
   }
 
   return res.status(401).json({ error: 'Password salah.' });
