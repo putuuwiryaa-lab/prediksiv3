@@ -1,33 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://prediksiv3.vercel.app",
-];
-
-function getAllowedOrigins() {
-  const raw = Deno.env.get("PUBLIC_ALLOWED_ORIGINS") || "";
-  const configured = raw
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  return configured.length ? configured : DEFAULT_ALLOWED_ORIGINS;
-}
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("Origin") || "";
-  const allowedOrigins = getAllowedOrigins();
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Vary": "Origin",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+};
 
 function validDigitList(value: unknown, limit: number) {
   if (!Array.isArray(value)) return [];
@@ -52,8 +29,6 @@ function parseHistory(raw: unknown) {
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
-
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
