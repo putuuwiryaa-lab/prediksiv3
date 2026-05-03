@@ -28,7 +28,6 @@
     min-height: 100vh;
   }
 
-  /* ── LOGIN ── */
   #loginScreen {
     display: flex;
     align-items: center;
@@ -46,28 +45,10 @@
     max-width: 340px;
   }
 
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    margin-bottom: 2px;
-  }
+  .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 2px; margin-bottom: 2px; }
   .logo span { color: var(--accent); }
-
-  .logo-sub {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    margin-bottom: 28px;
-  }
-
-  .field-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    margin-bottom: 7px;
-  }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 28px; }
+  .field-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 7px; }
 
   input[type=password] {
     width: 100%;
@@ -101,15 +82,8 @@
   .btn-primary:hover { opacity: 0.85; }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .login-err {
-    font-size: 11px;
-    color: var(--warn);
-    margin-top: 10px;
-    text-align: center;
-    min-height: 14px;
-  }
+  .login-err { font-size: 11px; color: var(--warn); margin-top: 10px; text-align: center; min-height: 14px; }
 
-  /* ── ADMIN PANEL ── */
   #adminPanel { display: none; min-height: 100vh; flex-direction: column; }
 
   .topbar {
@@ -120,13 +94,7 @@
     align-items: center;
     justify-content: space-between;
   }
-
-  .topbar-logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 2px;
-  }
+  .topbar-logo { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 2px; }
   .topbar-logo span { color: var(--accent); }
 
   .btn-logout {
@@ -145,13 +113,7 @@
 
   .admin-content { padding: 18px; }
 
-  /* ── CONTROLS ── */
-  .controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 14px;
-    align-items: center;
-  }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
 
   .btn-collect {
     background: var(--accent);
@@ -182,13 +144,7 @@
   }
   .btn-clear:hover { border-color: var(--warn); color: var(--warn); }
 
-  .status {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    margin-bottom: 16px;
-    min-height: 14px;
-  }
+  .status { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 16px; min-height: 14px; }
   .status.loading { color: var(--accent); }
   .status.error { color: var(--warn); }
   .status.ok { color: var(--accent); }
@@ -205,16 +161,12 @@
     vertical-align: middle;
   }
 
-  /* ── OUTPUT BOXES ── */
   .output-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
-
-  @media (max-width: 560px) {
-    .output-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 560px) { .output-grid { grid-template-columns: 1fr; } }
 
   .output-box {
     background: var(--card);
@@ -231,11 +183,7 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .output-type {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
+  .output-type { font-size: 10px; font-weight: 700; letter-spacing: 2px; }
   .output-type.ai { color: var(--accent); }
   .output-type.bbfs { color: var(--accent2); }
 
@@ -264,12 +212,7 @@
     min-height: 72px;
   }
 
-  .empty-hint {
-    color: var(--muted);
-    font-size: 11px;
-    font-style: italic;
-  }
-
+  .empty-hint { color: var(--muted); font-size: 11px; font-style: italic; }
   .row-name { color: var(--muted); }
   .row-sep { color: var(--border); }
   .row-val { color: var(--text); font-weight: 600; }
@@ -277,7 +220,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="logo">ANGKA <span>PRO</span></div>
@@ -289,62 +231,56 @@
   </div>
 </div>
 
-<!-- ADMIN -->
 <div id="adminPanel">
   <div class="topbar">
     <div class="topbar-logo">ANGKA <span>PRO</span> ADMIN</div>
     <button class="btn-logout" onclick="doLogout()">LOGOUT</button>
   </div>
-
   <div class="admin-content">
-
     <div class="controls">
       <button class="btn-collect" id="collectBtn" onclick="collectAll()">⬇ COLLECT</button>
       <button class="btn-clear" onclick="clearAll()">CLEAR</button>
     </div>
-
     <div class="status" id="statusBar">Siap.</div>
-
     <div class="output-grid">
-
-      <!-- AI4 -->
       <div class="output-box">
         <div class="output-head">
           <div class="output-type ai">ANGKA IKUT (AI4)</div>
           <button class="btn-copy" id="copyAi" onclick="doCopy('ai')" disabled>COPY</button>
         </div>
-        <div class="output-text" id="aiOut">
-          <span class="empty-hint">Klik COLLECT</span>
-        </div>
+        <div class="output-text" id="aiOut"><span class="empty-hint">Klik COLLECT</span></div>
       </div>
-
-      <!-- BBFS8 -->
       <div class="output-box">
         <div class="output-head">
           <div class="output-type bbfs">BBFS 8 DIGIT</div>
           <button class="btn-copy" id="copyBbfs" onclick="doCopy('bbfs')" disabled>COPY</button>
         </div>
-        <div class="output-text" id="bbfsOut">
-          <span class="empty-hint">Klik COLLECT</span>
-        </div>
+        <div class="output-text" id="bbfsOut"><span class="empty-hint">Klik COLLECT</span></div>
       </div>
-
     </div>
   </div>
 </div>
 
 <script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
-  const SB_URL  = 'https://ldeofmwxttdjcvylhabu.supabase.co';
-  const SB_ANON = ''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZW9mbXd4dHRkamN2eWxoYWJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTM2NDYsImV4cCI6MjA5MjU4OTY0Nn0.MBl-9xqRmm0FxCuzuQR68zFKGkWY_yVV4I05yI1KM2U
-
+  const SB_URL     = 'https://ldeofmwxttdjcvylhabu.supabase.co';
   const SESSION_KEY = 'ap_adm';
+
+  // Anon key TIDAK hardcode di sini — diambil dari server saat login
+  let SB_ANON = '';
   let rawAi   = '';
   let rawBbfs = '';
 
-  // ── SESSION ───────────────────────────────────────────────────────────────
   function init() {
-    if (sessionStorage.getItem(SESSION_KEY) === '1') showPanel();
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (stored) {
+      try {
+        const s = JSON.parse(stored);
+        if (s.ok && s.key) {
+          SB_ANON = s.key;
+          showPanel();
+        }
+      } catch { sessionStorage.removeItem(SESSION_KEY); }
+    }
   }
 
   function showPanel() {
@@ -354,10 +290,10 @@
 
   function doLogout() {
     sessionStorage.removeItem(SESSION_KEY);
+    SB_ANON = '';
     location.reload();
   }
 
-  // ── LOGIN ─────────────────────────────────────────────────────────────────
   async function doLogin() {
     const pw  = document.getElementById('pwInput').value.trim();
     const btn = document.getElementById('loginBtn');
@@ -378,7 +314,8 @@
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        sessionStorage.setItem(SESSION_KEY, '1');
+        SB_ANON = data.key || '';
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, key: SB_ANON }));
         showPanel();
       } else {
         err.textContent = data.error || 'Password salah.';
@@ -396,14 +333,12 @@
     if (e.key === 'Enter') doLogin();
   });
 
-  // ── COLLECT ───────────────────────────────────────────────────────────────
   async function collectAll() {
     const btn = document.getElementById('collectBtn');
     btn.disabled = true;
     setStatus('loading', 'Mengambil data...');
 
     try {
-      // 1. Markets
       const mRes = await fetch(
         `${SB_URL}/rest/v1/markets?select=id,name,order&order=order.asc`,
         { headers: sbHeaders() }
@@ -412,7 +347,6 @@
       const markets = await mRes.json();
       if (!markets.length) throw new Error('Tidak ada pasaran');
 
-      // 2. Snapshots
       const ids  = markets.map(m => `"${m.id}"`).join(',');
       const sRes = await fetch(
         `${SB_URL}/rest/v1/prediction_snapshots?select=market_id,ai4,bbfs8&market_id=in.(${ids})&order=updated_at.desc`,
@@ -421,13 +355,11 @@
       if (!sRes.ok) throw new Error('Gagal ambil snapshots');
       const snaps = await sRes.json();
 
-      // Map terbaru per market
       const map = {};
       for (const s of snaps) {
         if (!map[s.market_id]) map[s.market_id] = s;
       }
 
-      // Build lines
       const aiLines   = [];
       const bbfsLines = [];
 
@@ -478,7 +410,6 @@
     const text = type === 'ai' ? rawAi : rawBbfs;
     const btn  = document.getElementById(type === 'ai' ? 'copyAi' : 'copyBbfs');
     if (!text) return;
-
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -490,16 +421,11 @@
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
-
     btn.textContent = '✓ COPIED';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'COPY';
-      btn.classList.remove('copied');
-    }, 1500);
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500);
   }
 
-  // ── HELPERS ───────────────────────────────────────────────────────────────
   function sbHeaders() {
     return {
       'apikey': SB_ANON,
@@ -511,20 +437,14 @@
   function setStatus(type, msg) {
     const el = document.getElementById('statusBar');
     el.className = 'status' + (type ? ` ${type}` : '');
-    el.innerHTML = type === 'loading'
-      ? `<span class="spinner"></span>${msg}`
-      : msg;
+    el.innerHTML = type === 'loading' ? `<span class="spinner"></span>${msg}` : msg;
   }
 
   function esc(s) {
-    return String(s || '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   init();
 </script>
 </body>
-  </html>
-  
+</html>
