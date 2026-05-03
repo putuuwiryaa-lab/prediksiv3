@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADMIN — ANGKA PRO</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #080c10;
+    --surface: #0d1117;
+    --border: #1e2733;
+    --accent: #00e5a0;
+    --accent2: #0090ff;
+    --warn: #ff4560;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+    --card: #111820;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+  .logo span { color: var(--accent); }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    margin-bottom: 7px;
+  }
+
+  input[type=password] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+  input[type=password]:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 7px;
+    padding: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .login-err {
+    font-size: 11px;
+    color: var(--warn);
+    margin-top: 10px;
+    text-align: center;
+    min-height: 14px;
+  }
+
+  /* ── ADMIN PANEL ── */
+  #adminPanel { display: none; min-height: 100vh; flex-direction: column; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+  .topbar-logo span { color: var(--accent); }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 5px 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-logout:hover { border-color: var(--warn); color: var(--warn); }
+
+  .admin-content { padding: 18px; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+
+  .btn-collect {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-collect:hover { opacity: 0.85; }
+  .btn-collect:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-clear {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 7px;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--warn); color: var(--warn); }
+
+  .status {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    min-height: 14px;
+  }
+  .status.loading { color: var(--accent); }
+  .status.error { color: var(--warn); }
+  .status.ok { color: var(--accent); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 7px;
+    vertical-align: middle;
+  }
+
+  /* ── OUTPUT BOXES ── */
+  .output-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 560px) {
+    .output-grid { grid-template-columns: 1fr; }
+  }
+
+  .output-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .output-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .output-type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .output-type.ai { color: var(--accent); }
+  .output-type.bbfs { color: var(--accent2); }
+
+  .btn-copy {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 4px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-copy:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.copied { border-color: var(--accent); color: var(--accent); }
+  .btn-copy:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .output-text {
+    padding: 13px;
+    font-size: 12px;
+    line-height: 1.9;
+    white-space: pre;
+    overflow-x: auto;
+    min-height: 72px;
+  }
+
+  .empty-hint {
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+  }
+
+  .row-name { color: var(--muted); }
+  .row-sep { color: var(--border); }
+  .row-val { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="logo">ANGKA <span>PRO</span></div>
+    <div class="logo-sub">ADMIN ACCESS</div>
+    <div class="field-label">PASSWORD</div>
+    <input type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">MASUK</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPanel">
+  <div class="topbar">
+    <div class="topbar-logo">ANGKA <span>PRO</span> ADMIN</div>
+    <button class="btn-logout" onclick="doLogout()">LOGOUT</button>
+  </div>
+
+  <div class="admin-content">
+
+    <div class="controls">
+      <button class="btn-collect" id="collectBtn" onclick="collectAll()">⬇ COLLECT</button>
+      <button class="btn-clear" onclick="clearAll()">CLEAR</button>
+    </div>
+
+    <div class="status" id="statusBar">Siap.</div>
+
+    <div class="output-grid">
+
+      <!-- AI4 -->
+      <div class="output-box">
+        <div class="output-head">
+          <div class="output-type ai">ANGKA IKUT (AI4)</div>
+          <button class="btn-copy" id="copyAi" onclick="doCopy('ai')" disabled>COPY</button>
+        </div>
+        <div class="output-text" id="aiOut">
+          <span class="empty-hint">Klik COLLECT</span>
+        </div>
+      </div>
+
+      <!-- BBFS8 -->
+      <div class="output-box">
+        <div class="output-head">
+          <div class="output-type bbfs">BBFS 8 DIGIT</div>
+          <button class="btn-copy" id="copyBbfs" onclick="doCopy('bbfs')" disabled>COPY</button>
+        </div>
+        <div class="output-text" id="bbfsOut">
+          <span class="empty-hint">Klik COLLECT</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ────────────────────────────────────────────────────────────────
+  const SB_URL  = 'https://ldeofmwxttdjcvylhabu.supabase.co';
+  const SB_ANON = ''; // isi anon key kamu di sini
+
+  const SESSION_KEY = 'ap_adm';
+  let rawAi   = '';
+  let rawBbfs = '';
+
+  // ── SESSION ───────────────────────────────────────────────────────────────
+  function init() {
+    if (sessionStorage.getItem(SESSION_KEY) === '1') showPanel();
+  }
+
+  function showPanel() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display  = 'flex';
+  }
+
+  function doLogout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  // ── LOGIN ─────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const pw  = document.getElementById('pwInput').value.trim();
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('loginErr');
+
+    if (!pw) { err.textContent = 'Password wajib diisi.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'CHECKING...';
+    err.textContent = '';
+
+    try {
+      const res  = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        showPanel();
+      } else {
+        err.textContent = data.error || 'Password salah.';
+        btn.disabled = false;
+        btn.textContent = 'MASUK';
+      }
+    } catch {
+      err.textContent = 'Gagal terhubung ke server.';
+      btn.disabled = false;
+      btn.textContent = 'MASUK';
+    }
+  }
+
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ── COLLECT ───────────────────────────────────────────────────────────────
+  async function collectAll() {
+    const btn = document.getElementById('collectBtn');
+    btn.disabled = true;
+    setStatus('loading', 'Mengambil data...');
+
+    try {
+      // 1. Markets
+      const mRes = await fetch(
+        `${SB_URL}/rest/v1/markets?select=id,name,order&order=order.asc`,
+        { headers: sbHeaders() }
+      );
+      if (!mRes.ok) throw new Error('Gagal ambil markets');
+      const markets = await mRes.json();
+      if (!markets.length) throw new Error('Tidak ada pasaran');
+
+      // 2. Snapshots
+      const ids  = markets.map(m => `"${m.id}"`).join(',');
+      const sRes = await fetch(
+        `${SB_URL}/rest/v1/prediction_snapshots?select=market_id,ai4,bbfs8&market_id=in.(${ids})&order=updated_at.desc`,
+        { headers: sbHeaders() }
+      );
+      if (!sRes.ok) throw new Error('Gagal ambil snapshots');
+      const snaps = await sRes.json();
+
+      // Map terbaru per market
+      const map = {};
+      for (const s of snaps) {
+        if (!map[s.market_id]) map[s.market_id] = s;
+      }
+
+      // Build lines
+      const aiLines   = [];
+      const bbfsLines = [];
+
+      for (const m of markets) {
+        const s    = map[m.id];
+        const name = m.name.toUpperCase();
+        const ai   = Array.isArray(s?.ai4)   ? s.ai4.join('')   : '----';
+        const bbfs = Array.isArray(s?.bbfs8) ? s.bbfs8.join('') : '--------';
+        aiLines.push(`${name} ## ${ai}`);
+        bbfsLines.push(`${name} ## ${bbfs}`);
+      }
+
+      rawAi   = aiLines.join('\n');
+      rawBbfs = bbfsLines.join('\n');
+
+      renderLines('aiOut',   aiLines);
+      renderLines('bbfsOut', bbfsLines);
+
+      document.getElementById('copyAi').disabled   = false;
+      document.getElementById('copyBbfs').disabled = false;
+
+      setStatus('ok', `✓ ${markets.length} pasaran berhasil dikumpulkan.`);
+
+    } catch (e) {
+      setStatus('error', `✕ ${e.message}`);
+    }
+
+    btn.disabled = false;
+  }
+
+  function renderLines(elId, lines) {
+    document.getElementById(elId).innerHTML = lines.map(line => {
+      const [name, val] = line.split(' ## ');
+      return `<span class="row-name">${esc(name)}</span><span class="row-sep"> ## </span><span class="row-val">${esc(val)}</span>`;
+    }).join('\n');
+  }
+
+  function clearAll() {
+    rawAi = rawBbfs = '';
+    document.getElementById('aiOut').innerHTML   = '<span class="empty-hint">Klik COLLECT</span>';
+    document.getElementById('bbfsOut').innerHTML = '<span class="empty-hint">Klik COLLECT</span>';
+    document.getElementById('copyAi').disabled   = true;
+    document.getElementById('copyBbfs').disabled = true;
+    setStatus('', 'Siap.');
+  }
+
+  async function doCopy(type) {
+    const text = type === 'ai' ? rawAi : rawBbfs;
+    const btn  = document.getElementById(type === 'ai' ? 'copyAi' : 'copyBbfs');
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    btn.textContent = '✓ COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'COPY';
+      btn.classList.remove('copied');
+    }, 1500);
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────────────
+  function sbHeaders() {
+    return {
+      'apikey': SB_ANON,
+      'Authorization': `Bearer ${SB_ANON}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  function setStatus(type, msg) {
+    const el = document.getElementById('statusBar');
+    el.className = 'status' + (type ? ` ${type}` : '');
+    el.innerHTML = type === 'loading'
+      ? `<span class="spinner"></span>${msg}`
+      : msg;
+  }
+
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  init();
+</script>
+</body>
+  </html>
+  
