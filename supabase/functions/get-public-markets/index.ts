@@ -15,17 +15,25 @@ function validDigitList(value: unknown, limit: number) {
     .slice(0, limit);
 }
 
-function normalizeSnapshot(value: unknown) {
-  if (Array.isArray(value)) return value[0] || {};
-  if (value && typeof value === "object") return value as Record<string, unknown>;
-  return {};
-}
-
 function parseHistory(raw: unknown) {
   return String(raw || "")
     .trim()
     .split(/\s+/)
     .filter((token) => /^\d{4}$/.test(token));
+}
+
+function indexSnapshots(rows: unknown[] | null) {
+  const map = new Map<string, Record<string, unknown>>();
+
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    if (!row || typeof row !== "object") return;
+
+    const item = row as Record<string, unknown>;
+    const marketId = String(item.market_id || item.marketId || item.id || "");
+    if (marketId) map.set(marketId, item);
+  });
+
+  return map;
 }
 
 Deno.serve(async (req) => {
@@ -55,30 +63,22 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const { data, error } = await supabase
+    const { data: markets, error: marketsError } = await supabase
       .from("markets")
-      .select(`
-        id,
-        name,
-        order,
-        updated_at,
-        history_data,
-        prediction_snapshot(
-          ai4,
-          bbfs8,
-          poltar_as,
-          poltar_kop,
-          poltar_kepala,
-          poltar_ekor
-        )
-      `)
+      .select("id, name, order, updated_at, history_data")
       .order("order", { ascending: true });
 
-    if (error) throw error;
+    if (marketsError) throw marketsError;
 
-    const safeData = (data || []).map((market: Record<string, unknown>) => {
+    const { data: snapshots } = await supabase
+      .from("prediction_snapshot")
+      .select("market_id, ai4, bbfs8, poltar_as, poltar_kop, poltar_kepala, poltar_ekor");
+
+    const snapshotByMarket = indexSnapshots(snapshots as unknown[] | null);
+
+    const safeData = (markets || []).map((market: Record<string, unknown>) => {
       const history = parseHistory(market.history_data);
-      const snapshot = normalizeSnapshot(market.prediction_snapshot);
+      const snapshot = snapshotByMarket.get(String(market.id)) || {};
 
       return {
         id: market.id,
